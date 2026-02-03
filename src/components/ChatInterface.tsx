@@ -119,7 +119,6 @@ export default function ChatInterface() {
             setCurrentStep(s => s + 1)
         } else {
             setIsTransitioning(true)
-            // Transition message: "Perfeito. Estou organizando sua proposta."
             setTimeout(() => {
                 setIsFinished(true)
                 setIsTransitioning(false)
@@ -139,25 +138,27 @@ export default function ChatInterface() {
         }
 
         return (
-            <div className="max-w-xl mx-auto text-center py-12 px-4">
+            <div className="max-w-xl mx-auto text-center py-24">
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                 >
-                    <Card className="p-12 border border-border shadow-2xl rounded-none bg-white">
-                        <div className="w-16 h-16 bg-black flex items-center justify-center mx-auto mb-8">
-                            <Check className="text-white w-8 h-8" />
+                    <Card className="p-20 border border-border/60 bg-white">
+                        <div className="w-12 h-12 bg-black flex items-center justify-center mx-auto mb-12">
+                            <Check className="text-white w-6 h-6" />
                         </div>
-                        <h2 className="text-3xl mb-4 font-serif">Sua proposta está pronta.</h2>
-                        <p className="text-muted-foreground mb-12 font-serif text-lg italic">
-                            Libere sua proposta completa para acesso imediato ao PDF.
+                        <h2 className="text-4xl mb-6 font-serif italic tracking-tighter">Sua proposta está pronta.</h2>
+                        <p className="text-muted-foreground mb-16 font-serif text-lg italic opacity-60">
+                            O PDF foi organizado com sucesso. <br /> Libere o acesso completo abaixo.
                         </p>
                         <Button
+                            variant="premium"
                             size="lg"
-                            className="w-full premium-button h-16"
+                            className="w-full"
                             onClick={() => window.location.href = '/checkout'}
                         >
-                            Liberar agora
+                            Liberar Proposta
                         </Button>
                     </Card>
                 </motion.div>
@@ -167,13 +168,13 @@ export default function ChatInterface() {
 
     if (isTransitioning) {
         return (
-            <div className="max-w-2xl mx-auto px-6 py-40 text-center">
+            <div className="max-w-2xl mx-auto px-6 py-56 text-center">
                 <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-2xl font-serif italic text-muted-foreground"
+                    className="text-3xl font-serif italic text-muted-foreground animate-pulse"
                 >
-                    Perfeito. Estou organizando sua proposta.
+                    Organizando sua proposta...
                 </motion.p>
             </div>
         )
@@ -181,16 +182,16 @@ export default function ChatInterface() {
 
     if (currentStep === -1) {
         return (
-            <div className="max-w-2xl mx-auto px-6 py-24 text-center space-y-12">
+            <div className="max-w-2xl mx-auto px-6 py-32 text-center space-y-16">
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-6"
+                    className="space-y-8"
                 >
-                    <h2 className="text-4xl md:text-5xl font-serif tracking-tight">Vamos criar sua proposta.</h2>
-                    <p className="text-xl text-muted-foreground font-serif italic">Responda algumas perguntas rápidas.</p>
+                    <h2 className="text-5xl md:text-6xl font-serif tracking-tighter italic">Inicie sua proposta.</h2>
+                    <p className="text-xl text-muted-foreground font-serif italic opacity-60">Responda algumas perguntas rápidas para estruturar seu negócio.</p>
                 </motion.div>
-                <Button onClick={handleNext} className="premium-button h-14 px-12">
+                <Button variant="premium" onClick={handleNext} className="h-16 px-16">
                     Começar
                 </Button>
             </div>
@@ -201,56 +202,57 @@ export default function ChatInterface() {
 
     return (
         <div className="max-w-2xl mx-auto px-6 py-12">
-            <div className="space-y-16">
-                {/* Past messages */}
+            <div className="space-y-24">
+                {/* Past entries - minimalist editorial list */}
                 <div className="space-y-12">
                     {STEPS.slice(0, currentStep).map((s) => (
-                        <div key={s.id} className="space-y-2 opacity-30 border-l border-black/10 pl-6">
-                            <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{s.question}</p>
-                            <p className="font-serif text-xl">{data[s.field]}</p>
+                        <div key={s.id} className="group space-y-2 opacity-20 hover:opacity-100 transition-opacity duration-500 border-l border-border/30 pl-8">
+                            <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold text-muted-foreground">{s.question}</p>
+                            <p className="font-serif text-2xl italic tracking-tight">{data[s.field]}</p>
                         </div>
                     ))}
                 </div>
 
-                {/* Current message */}
+                {/* Current question - focused centered editorial */}
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={step.id}
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                        className="space-y-8"
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                        className="space-y-12"
                     >
-                        <div className="flex items-center gap-4">
-                            <div className="h-px bg-black flex-grow opacity-10"></div>
-                            <p className="font-sans text-[10px] uppercase tracking-[0.3em] font-bold opacity-30">
-                                {currentStep + 1} de {STEPS.length}
+                        <div className="flex items-center gap-8 opacity-20">
+                            <div className="h-px bg-foreground flex-grow"></div>
+                            <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold">
+                                {currentStep + 1} / {STEPS.length}
                             </p>
-                            <div className="h-px bg-black flex-grow opacity-10"></div>
+                            <div className="h-px bg-foreground flex-grow"></div>
                         </div>
 
-                        <h2 className="text-4xl md:text-5xl leading-tight text-center font-serif py-4">
+                        <h2 className="text-5xl md:text-6xl leading-tight text-center font-serif italic tracking-tighter py-4">
                             {step.question}
                         </h2>
 
-                        <div className="relative pt-4">
+                        <div className="relative pt-8 max-w-lg mx-auto">
                             <input
                                 ref={inputRef}
                                 type="text"
                                 placeholder={step.placeholder}
-                                className="input-minimal !text-center placeholder:text-center italic"
+                                className="input-minimal !text-center placeholder:text-center italic text-3xl"
                                 value={data[step.field]}
                                 onChange={(e) => setData({ ...data, [step.field]: e.target.value })}
                                 onKeyDown={handleKeyDown}
                             />
-                            <div className="flex justify-center mt-12">
+                            <div className="flex justify-center mt-20">
                                 <Button
+                                    variant="premium"
                                     onClick={handleNext}
                                     disabled={!data[step.field]}
-                                    className="rounded-full w-14 h-14 p-0 bg-black hover:bg-black/80 transition-all duration-300 disabled:opacity-5 disabled:scale-95"
+                                    className="rounded-none w-20 h-20 p-0 flex items-center justify-center transition-all duration-300 disabled:opacity-5 disabled:grayscale"
                                 >
-                                    <ArrowRight className="w-6 h-6" />
+                                    <ArrowRight className="w-8 h-8" />
                                 </Button>
                             </div>
                         </div>

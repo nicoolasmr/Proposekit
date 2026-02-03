@@ -1,11 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { FileText, Plus, Eye, Download, Share2, MoreHorizontal, Settings, CreditCard, ChevronRight } from 'lucide-react'
 import LogoutButton from '@/components/LogoutButton'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -15,6 +13,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
+import Link from 'next/link'
 
 export default async function DashboardPage() {
     const supabase = await createClient()
@@ -39,42 +38,42 @@ export default async function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-background flex flex-col selection:bg-black selection:text-white">
-            {/* Dashboard Header */}
-            <header className="py-6 px-8 md:px-16 border-b border-border flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-40">
-                <Link href="/" className="font-serif text-2xl tracking-tighter flex items-center gap-2">
-                    PROPOSE<span className="font-sans font-bold italic tracking-tight">KIT</span>
+            {/* Minimalist Dashboard Header */}
+            <header className="py-10 px-8 md:px-16 border-b border-border/40 flex justify-between items-center bg-background sticky top-0 z-40">
+                <Link href="/" className="font-serif text-2xl tracking-tighter italic">
+                    PROPOSE<span className="font-sans font-bold not-italic">KIT</span>
                 </Link>
 
-                <div className="flex items-center gap-10">
-                    <div className="hidden md:flex items-center gap-2">
+                <div className="flex items-center gap-12">
+                    <div className="hidden md:flex items-center">
                         {credits?.balance && credits.balance > 0 ? (
-                            <span className="text-[10px] uppercase tracking-[0.2em] font-sans font-bold opacity-60">
+                            <span className="text-[10px] uppercase tracking-[0.4em] font-sans font-bold opacity-40">
                                 {credits.balance === 1 ? '1 proposta gratuita disponível' : `${credits.balance} Propostas disponíveis`}
                             </span>
                         ) : (
-                            <span className="text-[10px] uppercase tracking-[0.2em] font-sans font-bold opacity-30">
-                                Você usou todos os seus créditos.
+                            <span className="text-[10px] uppercase tracking-[0.4em] font-sans font-bold opacity-20">
+                                Saldo de créditos esgotado
                             </span>
                         )}
                     </div>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 border border-border">
-                                <Avatar className="h-full w-full rounded-full">
-                                    <AvatarFallback className="bg-black text-white font-bold text-xs">{userInitials}</AvatarFallback>
+                            <Button variant="ghost" className="relative h-10 w-10 p-0 border border-border/60">
+                                <Avatar className="h-full w-full rounded-none">
+                                    <AvatarFallback className="bg-black text-white font-bold text-[10px] tracking-widest">{userInitials}</AvatarFallback>
                                 </Avatar>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56 rounded-none p-2 border-border shadow-2xl" align="end" forceMount>
-                            <DropdownMenuLabel className="font-sans text-[10px] uppercase tracking-widest text-muted-foreground p-2">Sua Conta</DropdownMenuLabel>
-                            <DropdownMenuItem className="p-3 font-serif cursor-pointer">
-                                <CreditCard className="mr-3 h-4 w-4" /> Comprar Créditos
+                        <DropdownMenuContent className="w-64 rounded-none p-4 border-border shadow-2xl" align="end">
+                            <DropdownMenuLabel className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-30 p-2">Sua Conta</DropdownMenuLabel>
+                            <DropdownMenuItem className="p-3 font-serif italic cursor-pointer">
+                                <CreditCard className="mr-3 h-4 w-4 opacity-40" /> Comprar Créditos
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="p-3 font-serif cursor-pointer">
-                                <Settings className="mr-3 h-4 w-4" /> Configurações
+                            <DropdownMenuItem className="p-3 font-serif italic cursor-pointer">
+                                <Settings className="mr-3 h-4 w-4 opacity-40" /> Configurações
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator className="bg-border/50" />
+                            <DropdownMenuSeparator className="bg-border/50 my-2" />
                             <div className="p-1">
                                 <LogoutButton />
                             </div>
@@ -83,112 +82,104 @@ export default async function DashboardPage() {
                 </div>
             </header>
 
-            <main className="flex-grow p-8 md:p-16 max-w-7xl mx-auto w-full">
-                {/* TOP BAR */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-12 mb-20">
-                    <div className="space-y-4">
-                        <div className="inline-block border border-black/10 px-3 py-1">
-                            <span className="text-[10px] uppercase tracking-[0.3em] font-sans font-bold">Resumo da Conta</span>
-                        </div>
-                        <h1 className="text-5xl md:text-6xl font-serif tracking-tighter leading-none">
-                            Bem-vindo, <br /> {user.email?.split('@')[0]}.
+            <main className="flex-grow p-8 md:p-24 max-w-6xl mx-auto w-full">
+                {/* Dashboard Summary */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-16 mb-32">
+                    <div className="space-y-6">
+                        <span className="text-[10px] uppercase tracking-[0.4em] font-sans font-bold opacity-30">Console de Gestão</span>
+                        <h1 className="text-6xl md:text-8xl font-serif tracking-tighter leading-none italic">
+                            Olá, {user.email?.split('@')[0]}.
                         </h1>
-                        <p className="text-xl text-muted-foreground font-serif italic opacity-60">
-                            Gerencie suas propostas e acompanhe o status dos seus contratos.
+                        <p className="text-2xl text-muted-foreground font-serif italic opacity-60">
+                            Acompanhe sua autoridade e o status das suas negociações.
                         </p>
                     </div>
                     <Link href="/">
-                        <Button size="lg" className="premium-button h-16 group">
-                            <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform duration-300" /> Nova Proposta
+                        <Button variant="premium" size="lg" className="h-20 px-12">
+                            <Plus className="w-5 h-5 mr-3" /> Nova Proposta
                         </Button>
                     </Link>
                 </div>
 
-                {/* STATS (Optional visual flair) */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-20">
-                    <div className="border border-border p-8 bg-white space-y-2">
-                        <p className="text-[10px] uppercase tracking-[0.2em] font-sans text-muted-foreground">Total Gerado</p>
-                        <p className="text-3xl font-serif tracking-tight">{proposals?.length || 0}</p>
+                {/* Editorial Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-1px bg-border/40 border border-border/40 mb-32">
+                    <div className="bg-background p-12 space-y-4">
+                        <p className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-30">Propostas Emitidas</p>
+                        <p className="text-5xl font-serif italic tracking-tight">{proposals?.length || 0}</p>
                     </div>
-                    <div className="border border-border p-8 bg-white space-y-2">
-                        <p className="text-[10px] uppercase tracking-[0.2em] font-sans text-muted-foreground">Visualizações</p>
-                        <p className="text-3xl font-serif tracking-tight">0</p>
+                    <div className="bg-background p-12 space-y-4">
+                        <p className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-30">Interações</p>
+                        <p className="text-5xl font-serif italic tracking-tight">0</p>
                     </div>
-                    <div className="border border-border p-8 bg-white space-y-2">
-                        <p className="text-[10px] uppercase tracking-[0.2em] font-sans text-muted-foreground">Aprovadas</p>
-                        <p className="text-3xl font-serif tracking-tight">0</p>
-                    </div>
-                    <div className="border border-border p-8 bg-black text-white space-y-2">
-                        <p className="text-[10px] uppercase tracking-[0.2em] font-sans text-white/40">Propostas Disponíveis</p>
-                        <p className="text-3xl font-serif tracking-tight">{credits?.balance || 0}</p>
+                    <div className="bg-black text-white p-12 space-y-4">
+                        <p className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-40">Saldo Disponível</p>
+                        <p className="text-5xl font-serif italic tracking-tight">{credits?.balance || 0}</p>
                     </div>
                 </div>
 
-                <Separator className="bg-border/50 mb-12" />
-
-                {/* LIST */}
+                {/* Proposals List */}
                 <div className="space-y-12">
+                    <h2 className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-30 mb-8 pb-4 border-b border-border/40">Recentes</h2>
+
                     {!proposals || proposals.length === 0 ? (
-                        <div className="py-40 text-center border-2 border-dashed border-border flex flex-col items-center">
-                            <FileText className="w-16 h-16 mb-8 opacity-5" />
-                            <h3 className="text-2xl mb-4 font-serif italic">Nenhuma proposta enviada ainda.</h3>
-                            <p className="text-muted-foreground mb-12 max-w-sm mx-auto">Sua próxima grande vitória começa com o primeiro passo no chat.</p>
+                        <div className="py-40 text-center border border-dashed border-border/60 flex flex-col items-center">
+                            <p className="text-2xl mb-12 font-serif italic opacity-30">Nenhuma proposta estruturada ainda.</p>
                             <Link href="/">
-                                <Button variant="outline" className="premium-button-outline">Começar agora</Button>
+                                <Button variant="premium-outline">Criar primeira proposta</Button>
                             </Link>
                         </div>
                     ) : (
-                        <div className="grid gap-1">
+                        <div className="grid gap-0 border-t border-border/40">
                             {proposals.map((proposal) => (
-                                <div key={proposal.id} className="group bg-white border border-border mt-[-1px] transition-[background-color] hover:bg-secondary/50 p-8 md:p-12 flex flex-col md:flex-row justify-between items-center gap-12 relative overflow-hidden content-auto">
-                                    <div className="flex gap-10 items-center w-full md:w-auto">
-                                        <div className="w-16 h-16 bg-secondary flex items-center justify-center text-muted-foreground shrink-0 border border-border group-hover:scale-110 transition-transform">
-                                            <FileText className="w-8 h-8 opacity-20" />
+                                <div key={proposal.id} className="group border-b border-border/40 hover:bg-secondary/20 p-12 flex flex-col md:flex-row justify-between items-center gap-12 transition-colors">
+                                    <div className="flex gap-12 items-center w-full md:w-auto">
+                                        <div className="w-20 h-20 bg-white border border-border/60 flex items-center justify-center grayscale opacity-30 group-hover:opacity-100 transition-all">
+                                            <FileText className="w-10 h-10" />
                                         </div>
-                                        <div className="space-y-1">
-                                            <h3 className="text-2xl md:text-3xl font-serif tracking-tight text-foreground/90 group-hover:underline underline-offset-8 transition-all">{proposal.service_description}</h3>
-                                            <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground">Cliente: {proposal.client_name}</p>
+                                        <div className="space-y-3">
+                                            <h3 className="text-3xl font-serif italic tracking-tight group-hover:underline underline-offset-8 decoration-1">{proposal.service_description}</h3>
+                                            <p className="text-[10px] uppercase tracking-[0.5em] font-bold opacity-40">Cliente: {proposal.client_name}</p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-12">
-                                        <div className="text-right border-r border-border pr-12 hidden lg:block">
-                                            <p className="text-[10px] uppercase tracking-[0.2em] font-sans text-muted-foreground mb-1">Investimento</p>
-                                            <p className="text-2xl font-serif tracking-tight">R$ {proposal.project_value?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}</p>
+                                    <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-16">
+                                        <div className="text-right hidden lg:block border-l border-border/40 pl-16">
+                                            <p className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-20 mb-2">Valor</p>
+                                            <p className="text-3xl font-serif italic tracking-tighter opacity-80">R$ {proposal.project_value?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}</p>
                                         </div>
 
                                         <div className="flex items-center gap-4">
                                             {proposal.status === 'released' ? (
-                                                <>
+                                                <div className="flex gap-2">
                                                     <Link href={`/p/${proposal.share_id}`} target="_blank">
-                                                        <Button variant="ghost" size="icon" title="Ver Link Público" className="h-12 w-12 rounded-none hover:bg-black hover:text-white transition-all border border-transparent hover:border-black">
+                                                        <Button variant="outline" size="icon" className="h-14 w-14">
                                                             <Eye className="w-5 h-5" />
                                                         </Button>
                                                     </Link>
                                                     <a href={`/api/proposals/${proposal.id}/pdf`}>
-                                                        <Button variant="ghost" size="icon" title="Baixar PDF" className="h-12 w-12 rounded-none hover:bg-black hover:text-white transition-all border border-transparent hover:border-black">
+                                                        <Button variant="outline" size="icon" className="h-14 w-14">
                                                             <Download className="w-5 h-5" />
                                                         </Button>
                                                     </a>
-                                                    <Button variant="ghost" size="icon" title="Compartilhar" className="h-12 w-12 rounded-none border border-black hover:bg-black hover:text-white transition-all">
-                                                        <Share2 className="w-5 h-5" />
+                                                    <Button variant="premium" className="h-14 px-8 text-[10px]">
+                                                        Gerenciar
                                                     </Button>
-                                                </>
+                                                </div>
                                             ) : (
-                                                <div className="flex items-center gap-6">
-                                                    <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground px-3 py-1 bg-secondary border border-border">
-                                                        {proposal.status === 'draft' ? 'Rascunho' : 'Aguardando Liberação'}
+                                                <div className="flex items-center gap-8">
+                                                    <span className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-30 whitespace-nowrap">
+                                                        {proposal.status === 'draft' ? 'Rascunho' : 'Bloqueado'}
                                                     </span>
                                                     {credits?.balance && credits.balance > 0 ? (
                                                         <Link href="/checkout">
-                                                            <Button className="premium-button h-12 text-[10px] px-6">
-                                                                Usar um crédito
+                                                            <Button variant="premium" className="h-14 px-10">
+                                                                Liberar
                                                             </Button>
                                                         </Link>
                                                     ) : (
                                                         <Link href="/checkout">
-                                                            <Button className="premium-button h-12 text-[10px] px-6">
-                                                                Comprar mais créditos
+                                                            <Button variant="premium-outline" className="h-14 px-10">
+                                                                Adquirir
                                                             </Button>
                                                         </Link>
                                                     )}
@@ -203,10 +194,9 @@ export default async function DashboardPage() {
                 </div>
             </main>
 
-            <footer className="py-20 border-t border-border mt-20">
-                <div className="max-w-7xl mx-auto px-8 md:px-16 flex flex-col md:flex-row justify-between items-center text-[10px] font-sans uppercase tracking-[0.4em] text-muted-foreground font-bold">
-                    <p>PROPOSEKIT PREMIUM LICENSE</p>
-                    <p className="opacity-30 tracking-[1em]">MDXXVI</p>
+            <footer className="py-24 border-t border-border/30 mt-32">
+                <div className="max-w-6xl mx-auto px-8 md:px-16 flex flex-col md:flex-row justify-between items-center text-[9px] font-sans uppercase tracking-[0.6em] text-muted-foreground font-bold opacity-30">
+                    <p>PROPOSEKIT HIGH AUTHORITY LICENSE</p>
                     <p>&copy; 2026</p>
                 </div>
             </footer>

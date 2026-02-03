@@ -1,24 +1,23 @@
 'use client'
 
 import ChatInterface from '@/components/ChatInterface'
-import { ArrowRight, Lock, Zap, FileText, CheckCircle, Quote } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 
 export default function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen selection:bg-black selection:text-white">
-      {/* Header */}
-      <header className="py-8 px-8 md:px-16 flex justify-between items-center bg-background/95 backdrop-blur-sm sticky top-0 z-50 border-b border-border/50">
-        <Link href="/" className="font-serif text-2xl tracking-tighter hover:opacity-70 transition-opacity flex items-center gap-2">
-          PROPOSE<span className="font-sans font-bold italic tracking-normal">KIT</span>
+    <div className="flex flex-col min-h-screen selection:bg-black selection:text-white bg-background">
+      {/* Header - Minimalist & Silent */}
+      <header className="py-12 px-8 md:px-16 flex justify-between items-center bg-background sticky top-0 z-50 border-b border-border/40">
+        <Link href="/" className="font-serif text-2xl tracking-tighter hover:opacity-70 transition-opacity flex items-center gap-2 italic">
+          PROPOSE<span className="font-sans font-bold not-italic tracking-normal">KIT</span>
         </Link>
-        <nav className="flex items-center gap-10">
-          <Link href="/login" className="text-[10px] font-sans tracking-[0.2em] uppercase font-bold hover:opacity-50 transition-opacity">Entrar</Link>
+        <nav className="flex items-center gap-12">
+          <Link href="/login" className="text-[10px] font-sans tracking-[0.3em] uppercase font-bold hover:opacity-50 transition-opacity">Login</Link>
           <Link href="/checkout">
-            <Button variant="outline" className="rounded-none border-black text-[10px] uppercase tracking-widest h-10 px-6 font-bold hover:bg-black hover:text-white transition-all">
+            <Button variant="premium-outline" size="sm">
               Criar Proposta
             </Button>
           </Link>
@@ -26,138 +25,122 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-grow">
-        {/* HERO SECTION */}
-        <section className="pt-24 pb-40 px-8 md:px-16 text-center max-w-5xl mx-auto">
-          <h1 className="text-6xl md:text-8xl mb-8 leading-[1] font-serif tracking-tighter">
-            Propostas claras fecham negócios mais rápido.
-          </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground font-serif mb-8 italic max-w-2xl mx-auto">
-            Crie uma proposta profissional em minutos — direto no chat.
-          </p>
-          <p className="text-lg text-muted-foreground/60 font-serif mb-12 max-w-xl mx-auto">
-            Sem modelos confusos. Sem improviso. Apenas uma proposta clara, organizada e pronta para ser enviada.
-          </p>
+        {/* HERO SECTION - Editorial & High Authority */}
+        <section className="pt-32 pb-56 px-8 md:px-16 text-center max-w-5xl mx-auto space-y-16">
+          <div className="space-y-8">
+            <h1 className="text-7xl md:text-9xl font-serif tracking-tighter leading-[0.9]">
+              Propostas que <br /> fecham negócios.
+            </h1>
+            <p className="text-2xl md:text-3xl text-muted-foreground font-serif italic max-w-3xl mx-auto opacity-70">
+              Transforme conversas em contratos profissionais com clareza editorial.
+            </p>
+          </div>
 
-          <div className="flex flex-col md:flex-row items-center justify-center gap-6 mb-20">
-            <Button size="lg" className="premium-button h-16 px-10" onClick={() => {
+          <div className="flex flex-col md:flex-row items-center justify-center gap-8 pt-8">
+            <Button variant="premium" className="h-20 px-16 text-base" onClick={() => {
               const chat = document.getElementById('chat-start')
               chat?.scrollIntoView({ behavior: 'smooth' })
             }}>
-              Criar minha proposta agora
+              Iniciar Proposta
             </Button>
-            <Button variant="ghost" className="text-[10px] uppercase tracking-[0.2em] font-bold">
-              Ver como funciona
+            <Button variant="link" className="text-[11px] uppercase tracking-[0.3em] font-bold opacity-40 hover:opacity-100 transition-opacity">
+              Ver Demonstração
             </Button>
           </div>
 
-          <div id="chat-start" className="mt-20 scroll-mt-32">
-            <ChatInterface />
-          </div>
-        </section>
-
-        {/* O PROBLEMA */}
-        <section className="py-40 bg-secondary border-y border-border px-8 md:px-16">
-          <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8">
-              <h2 className="text-4xl md:text-5xl font-serif tracking-tighter leading-tight">
-                O problema não é o serviço. <br /> É a proposta.
-              </h2>
-              <Separator className="w-12 bg-black" />
-              <p className="text-xl text-muted-foreground font-serif italic">
-                Propostas mal feitas criam dúvidas, atrasam decisões e fazem você parecer menos profissional do que realmente é.
-              </p>
-              <p className="text-xl text-muted-foreground font-serif italic">
-                Quando a proposta não é clara, o cliente hesita. E quem hesita, não fecha.
-              </p>
-            </div>
-            <div className="bg-white p-12 border border-border flex flex-col items-center justify-center space-y-6 opacity-40 grayscale pointer-events-none">
-              <div className="h-4 bg-black/10 w-full rounded-full"></div>
-              <div className="h-4 bg-black/10 w-2/3 rounded-full self-start"></div>
-              <div className="h-40 bg-black/5 w-full"></div>
+          <div id="chat-start" className="mt-32 scroll-mt-32 pt-16">
+            <div className="max-w-3xl mx-auto border-t border-border/50 pt-32">
+              <ChatInterface />
             </div>
           </div>
         </section>
 
-        {/* A SOLUÇÃO */}
-        <section className="py-40 px-8 md:px-16 bg-white text-black">
-          <div className="max-w-4xl mx-auto text-center space-y-12">
-            <h2 className="text-5xl md:text-6xl font-serif tracking-tighter">
-              Uma proposta simples, clara e profissional.
+        {/* O PROBLEMA - Minimalist & Direct */}
+        <section className="py-56 bg-secondary/30 border-y border-border px-8 md:px-16 text-center">
+          <div className="max-w-4xl mx-auto space-y-16">
+            <h2 className="text-5xl md:text-7xl font-serif tracking-tighter leading-tight italic">
+              O silêncio visual <br /> gera autoridade.
             </h2>
-            <p className="text-2xl text-muted-foreground font-serif italic max-w-2xl mx-auto">
-              O ProposeKit organiza seu serviço, deixa as condições claras e apresenta o valor de forma profissional. Sem ruído. Sem retrabalho. Sem explicações extras.
-            </p>
+            <div className="space-y-12 max-w-2xl mx-auto">
+              <p className="text-2xl text-muted-foreground font-serif italic leading-relaxed">
+                Propostas poluídas geram hesitação. <br /> Hesitação mata contratos.
+              </p>
+              <Separator className="w-16 bg-foreground/10 mx-auto" />
+              <p className="text-xl text-muted-foreground font-serif italic opacity-60">
+                O ProposeKit elimina o ruído e foca no que importa: <br /> o valor do seu trabalho apresentado com precisão.
+              </p>
+            </div>
           </div>
         </section>
 
-        {/* COMO FUNCIONA */}
-        <section className="py-40 px-8 md:px-16 border-t border-border">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-serif tracking-tight mb-20 text-center uppercase tracking-[0.2em] opacity-40">Como Funciona</h2>
-            <div className="grid md:grid-cols-3 gap-16">
-              <div className="space-y-6 text-center">
-                <div className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] opacity-30">Passo 1</div>
-                <h3 className="text-3xl font-serif tracking-tight">Você conversa.</h3>
-                <p className="text-muted-foreground font-serif text-lg italic opacity-70">Responda algumas perguntas simples no chat.</p>
+        {/* COMO FUNCIONA - Editorial Centered Grid */}
+        <section className="py-56 px-8 md:px-16 bg-background">
+          <div className="max-w-4xl mx-auto">
+            <div className="space-y-32">
+              <div className="grid md:grid-cols-2 gap-24 items-center">
+                <div className="space-y-6">
+                  <span className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] opacity-30">01 / Abordagem</span>
+                  <h3 className="text-4xl font-serif italic tracking-tight">Você conversa.</h3>
+                  <p className="text-muted-foreground font-serif text-xl italic opacity-70 border-l border-border pl-8">
+                    Responda perguntas essenciais em uma interface focada, livre de distrações.
+                  </p>
+                </div>
+                <div className="aspect-square bg-white border border-border/50 shadow-2xl opacity-50"></div>
               </div>
-              <div className="space-y-6 text-center">
-                <div className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] opacity-30">Passo 2</div>
-                <h3 className="text-3xl font-serif tracking-tight">A proposta é criada.</h3>
-                <p className="text-muted-foreground font-serif text-lg italic opacity-70">O sistema organiza tudo automaticamente em uma proposta profissional.</p>
-              </div>
-              <div className="space-y-6 text-center">
-                <div className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] opacity-30">Passo 3</div>
-                <h3 className="text-3xl font-serif tracking-tight">Você envia e fecha.</h3>
-                <p className="text-muted-foreground font-serif text-lg italic opacity-70">Envie o PDF e avance a negociação com clareza.</p>
+
+              <div className="grid md:grid-cols-2 gap-24 items-center">
+                <div className="aspect-square bg-white border border-border/50 shadow-2xl opacity-50 md:order-last"></div>
+                <div className="space-y-6 text-right md:pr-12">
+                  <span className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] opacity-30">02 / Curadoria</span>
+                  <h3 className="text-4xl font-serif italic tracking-tight">O sistema organiza.</h3>
+                  <p className="text-muted-foreground font-serif text-xl italic opacity-70 border-r border-border pr-8">
+                    Seus dados são estruturados automaticamente em um layout editorial de alta autoridade.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* PARA QUEM É */}
-        <section className="py-24 bg-secondary/50 px-8 md:px-16">
-          <div className="max-w-5xl mx-auto flex flex-wrap justify-center gap-12 text-center">
-            <div className="text-[10px] font-sans font-bold uppercase tracking-[0.3em] opacity-50 px-8 py-4 border border-border">Freelancers que querem parecer mais profissionais</div>
-            <div className="text-[10px] font-sans font-bold uppercase tracking-[0.3em] opacity-50 px-8 py-4 border border-border">Consultores que precisam de clareza para fechar</div>
-            <div className="text-[10px] font-sans font-bold uppercase tracking-[0.3em] opacity-50 px-8 py-4 border border-border">Agências pequenas que querem ganhar velocidade</div>
-          </div>
-        </section>
-
-        {/* MODELO DE USO (PRICING) */}
-        <section className="py-40 px-8 md:px-16 text-center bg-black text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-1/3 h-full bg-white/5 skew-x-12 translate-x-1/4"></div>
-          <div className="max-w-3xl mx-auto relative z-10 space-y-12">
-            <h2 className="text-5xl md:text-7xl font-serif tracking-tighter">Use uma proposta gratuitamente.</h2>
-            <p className="text-2xl font-serif italic opacity-60">
-              Você pode criar sua primeira proposta sem pagar. <br />
-              Para liberar o PDF final, basta cadastrar seus dados de pagamento. Sem cobrança imediata.
-            </p>
-
-            <div className="pt-8">
-              <Button size="lg" className="premium-button h-20 px-16 text-base bg-white text-black hover:bg-white/90">
-                Criar minha proposta agora
-              </Button>
-              <p className="mt-6 text-[10px] font-sans uppercase tracking-[0.3em] opacity-40">
-                Leva menos de 3 minutos.
+        {/* MODELO DE USO - Silent CTA */}
+        <section className="py-56 px-8 md:px-16 text-center bg-black text-white selection:bg-white selection:text-black">
+          <div className="max-w-3xl mx-auto space-y-16">
+            <h2 className="text-6xl md:text-8xl font-serif tracking-tighter italic leading-none">
+              Assine com <br /> confiança.
+            </h2>
+            <div className="space-y-8">
+              <p className="text-2xl font-serif italic opacity-60">
+                Experimente sua primeira proposta gratuitamente.
               </p>
+              <div className="pt-12">
+                <Button className="h-20 px-20 text-base bg-white text-black hover:bg-white/90 uppercase tracking-[0.3em]" onClick={() => {
+                  const chat = document.getElementById('chat-start')
+                  chat?.scrollIntoView({ behavior: 'smooth' })
+                }}>
+                  Iniciar agora
+                </Button>
+                <p className="mt-12 text-[10px] uppercase font-sans tracking-[0.4em] opacity-30">
+                  Acesso imediato. Sem taxas ocultas.
+                </p>
+              </div>
             </div>
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="py-24 border-t border-border px-8 md:px-16">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12">
-          <Link href="/" className="font-serif text-2xl tracking-tighter">
-            PROPOSE<span className="font-sans font-bold italic">KIT</span>
+      {/* Footer - Professional & Discreet */}
+      <footer className="py-32 border-t border-border/30 px-8 md:px-16 bg-background">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-16">
+          <Link href="/" className="font-serif text-2xl tracking-tighter italic">
+            PROPOSE<span className="font-sans font-bold not-italic">KIT</span>
           </Link>
-          <div className="flex gap-12 text-[10px] font-sans uppercase tracking-[0.3em] font-bold text-muted-foreground">
+          <div className="flex gap-16 text-[10px] font-sans uppercase tracking-[0.4em] font-bold text-muted-foreground">
             <Link href="/terms" className="hover:text-black transition-colors">Termos</Link>
             <Link href="/privacy" className="hover:text-black transition-colors">Privacidade</Link>
             <Link href="/contact" className="hover:text-black transition-colors">Contato</Link>
           </div>
-          <p className="text-[10px] font-sans uppercase tracking-[0.3em] text-muted-foreground opacity-50">
-            &copy; 2026 PROPOSEKIT. ALL RIGHTS RESERVED.
+          <p className="text-[10px] font-sans uppercase tracking-[0.4em] text-muted-foreground opacity-30">
+            &copy; 2026 PROPOSEKIT. HIGH AUTHORITY SOFTWARE.
           </p>
         </div>
       </footer>

@@ -3,114 +3,110 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { Loader2, ArrowRight, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { toast } from 'sonner'
 
 export default function LoginPage() {
+    const [loading, setLoading] = useState(false)
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
     const router = useRouter()
     const supabase = createClient()
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
-        setError(null)
-
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        })
-
-        if (error) {
-            setError(error.message)
-            setLoading(false)
-        } else {
+        try {
+            const { error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            })
+            if (error) throw error
             router.push('/dashboard')
+            router.refresh()
+        } catch (err: any) {
+            toast.error(err.message)
+        } finally {
+            setLoading(false)
         }
     }
 
     return (
-        <div className="min-h-screen flex flex-col bg-background selection:bg-black selection:text-white">
-            <header className="py-12 px-12 text-center md:text-left">
-                <Link href="/" className="font-serif text-2xl tracking-tighter hover:opacity-70 transition-opacity">
-                    PROPOSE<span className="font-sans font-bold italic tracking-tight">KIT</span>
-                </Link>
-            </header>
-
-            <main className="flex-grow flex items-center justify-center p-8">
-                <div className="max-w-md w-full space-y-16">
-                    <div className="text-center space-y-6">
-                        <div className="w-12 h-12 border border-black/10 flex items-center justify-center mx-auto">
-                            <Shield className="w-5 h-5 opacity-20" />
-                        </div>
-                        <h1 className="text-5xl font-serif tracking-tighter">Acesse sua conta.</h1>
-                        <p className="text-muted-foreground font-serif italic text-xl opacity-60">
-                            Gerencie suas propostas e acompanhe seus fechamentos com precisão.
+        <div className="min-h-screen flex flex-col lg:flex-row bg-background selection:bg-black selection:text-white">
+            {/* Branding Column */}
+            <div className="lg:w-1/2 p-16 md:p-32 flex flex-col justify-between border-r border-border/40 bg-white">
+                <div className="space-y-32">
+                    <Link href="/" className="font-serif text-3xl tracking-tighter italic hover:opacity-70 transition-opacity">
+                        PROPOSE<span className="font-sans font-bold not-italic">KIT</span>
+                    </Link>
+                    <div className="space-y-12">
+                        <h1 className="text-6xl md:text-8xl font-serif tracking-tighter leading-[0.9] italic">
+                            Gestão de <br /> Autoridade.
+                        </h1>
+                        <p className="text-2xl text-muted-foreground font-serif italic opacity-40">
+                            Acesse seu console de propostas.
                         </p>
                     </div>
+                </div>
+                <div className="text-[10px] uppercase tracking-[0.6em] text-muted-foreground font-bold opacity-30 pt-16">
+                    PROPOSEKIT SECURE ACCESS PROTOCOL
+                </div>
+            </div>
 
-                    <form onSubmit={handleLogin} className="space-y-12">
-                        {error && (
-                            <div className="bg-red-50 text-red-600 p-6 text-[10px] font-sans uppercase tracking-[0.2em] font-bold text-center border border-red-100">
-                                {error === 'Invalid login credentials' ? 'E-mail ou senha incorretos.' : error}
-                            </div>
-                        )}
+            {/* Login Column */}
+            <div className="lg:w-1/2 bg-secondary/20 p-16 md:p-32 flex items-center justify-center">
+                <div className="max-w-md w-full space-y-20">
+                    <div className="space-y-6">
+                        <h2 className="text-4xl font-serif italic tracking-tighter">Entrar no sistema.</h2>
+                        <p className="text-[11px] uppercase tracking-[0.4em] font-bold opacity-30">Controle total sobre suas negociações profissionais.</p>
+                    </div>
 
-                        <div className="space-y-8">
-                            <div className="space-y-3">
-                                <Label className="text-[10px] uppercase tracking-[0.2em] font-bold opacity-40">Identificação</Label>
+                    <form onSubmit={handleLogin} className="space-y-16">
+                        <div className="space-y-12">
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-30">E-mail Corporativo</label>
                                 <input
                                     type="email"
-                                    placeholder="E-mail"
+                                    placeholder="nome@empresa.com"
                                     className="input-minimal"
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={e => setEmail(e.target.value)}
                                     required
                                 />
                             </div>
-                            <div className="space-y-3">
-                                <Label className="text-[10px] uppercase tracking-[0.2em] font-bold opacity-40">Senha</Label>
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <label className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-30">Senha</label>
+                                    <Link href="#" className="text-[9px] uppercase tracking-[0.3em] font-bold opacity-20 hover:opacity-100 transition-all">Recuperar</Link>
+                                </div>
                                 <input
                                     type="password"
                                     placeholder="••••••••"
                                     className="input-minimal font-mono tracking-widest"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={e => setPassword(e.target.value)}
                                     required
                                 />
                             </div>
                         </div>
 
-                        <Button
-                            type="submit"
-                            disabled={loading}
-                            className="premium-button w-full h-20 flex items-center justify-center gap-4 group"
-                        >
-                            {loading ? (
-                                <Loader2 className="w-6 h-6 animate-spin" />
-                            ) : (
-                                <>Entrar no Dashboard <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" /></>
-                            )}
-                        </Button>
-                    </form>
+                        <div className="space-y-12">
+                            <Button variant="premium" className="w-full h-20 text-base" disabled={loading}>
+                                {loading ? <Loader2 className="animate-spin w-6 h-6" /> : 'Acessar Console'}
+                            </Button>
 
-                    <footer className="text-center space-y-8">
-                        <p className="text-[10px] font-sans uppercase tracking-[0.2em] text-muted-foreground">
-                            Novo por aqui?{' '}
-                            <Link href="/" className="text-black font-bold hover:underline">Use uma proposta gratuitamente</Link>
-                        </p>
-                        <div className="h-px bg-border max-w-[40px] mx-auto"></div>
-                        <p className="text-[10px] text-muted-foreground opacity-30 tracking-[0.4em]">PROPOSEKIT CORE</p>
-                    </footer>
+                            <div className="text-center space-y-4">
+                                <p className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-20">Ainda não possui acesso?</p>
+                                <Link href="/" className="block">
+                                    <Button variant="premium-outline" className="w-full h-16 text-xs">Criar Minha Primeira Proposta</Button>
+                                </Link>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-            </main>
+            </div>
         </div>
     )
 }
