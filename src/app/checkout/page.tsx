@@ -107,7 +107,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="space-y-6">
                         <h1 className="text-5xl font-serif italic tracking-tighter leading-tight">Autoridade concedida.</h1>
-                        <p className="text-xl text-muted-foreground italic font-serif opacity-60">Sua proposta foi estruturada e está disponível no console.</p>
+                        <p className="text-xl text-muted-foreground italic font-serif opacity-60">Sua proposta está pronta para envio.</p>
                     </div>
                     <Link href="/dashboard" className="block pt-8">
                         <Button variant="premium" className="w-full h-20 text-base">Acessar Dashboard</Button>
@@ -169,10 +169,10 @@ export default function CheckoutPage() {
                         ) : (
                             <motion.div key="billing" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-20">
                                 <div className="space-y-8 text-center md:text-left">
-                                    <h3 className="text-4xl font-serif italic tracking-tighter leading-tight">Confirmação <br /> de Autoridade.</h3>
+                                    <h3 className="text-4xl font-serif italic tracking-tighter leading-tight">Protocolo <br /> de Acesso.</h3>
                                     <p className="text-muted-foreground font-serif italic text-xl opacity-60 leading-relaxed">
-                                        Libere sua proposta usando seu crédito de cortesia. <br />
-                                        Nenhuma cobrança será realizada agora.
+                                        Para liberar sua proposta completa em PDF, confirme seus dados de pagamento. <br />
+                                        Você tem 1 proposta gratuita. Nenhuma cobrança será feita agora.
                                     </p>
                                 </div>
 

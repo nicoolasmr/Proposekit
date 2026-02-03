@@ -47,7 +47,7 @@ export default function StripeForm({ onSuccess }: { onSuccess: () => void }) {
                     className="w-full h-20 text-base"
                     disabled={!stripe || loading}
                 >
-                    {loading ? <Loader2 className="animate-spin w-6 h-6" /> : 'Validar Identidade'}
+                    {loading ? <Loader2 className="animate-spin w-6 h-6" /> : 'Liberar Proposta'}
                 </Button>
 
                 <p className="text-[10px] text-center uppercase tracking-[0.3em] font-bold opacity-20">
