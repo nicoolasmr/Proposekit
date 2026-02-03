@@ -47,13 +47,15 @@ export default async function DashboardPage() {
 
                 <div className="flex items-center gap-10">
                     <div className="hidden md:flex items-center gap-2">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                        </span>
-                        <span className="text-[10px] uppercase tracking-[0.2em] font-sans font-bold opacity-60">
-                            {credits?.balance || 0} Créditos
-                        </span>
+                        {credits?.balance && credits.balance > 0 ? (
+                            <span className="text-[10px] uppercase tracking-[0.2em] font-sans font-bold opacity-60">
+                                {credits.balance === 1 ? '1 proposta gratuita disponível' : `${credits.balance} Propostas disponíveis`}
+                            </span>
+                        ) : (
+                            <span className="text-[10px] uppercase tracking-[0.2em] font-sans font-bold opacity-30">
+                                Você usou todos os seus créditos.
+                            </span>
+                        )}
                     </div>
 
                     <DropdownMenu>
@@ -117,7 +119,7 @@ export default async function DashboardPage() {
                         <p className="text-3xl font-serif tracking-tight">0</p>
                     </div>
                     <div className="border border-border p-8 bg-black text-white space-y-2">
-                        <p className="text-[10px] uppercase tracking-[0.2em] font-sans text-white/40">Créditos</p>
+                        <p className="text-[10px] uppercase tracking-[0.2em] font-sans text-white/40">Propostas Disponíveis</p>
                         <p className="text-3xl font-serif tracking-tight">{credits?.balance || 0}</p>
                     </div>
                 </div>
@@ -156,19 +158,42 @@ export default async function DashboardPage() {
                                         </div>
 
                                         <div className="flex items-center gap-4">
-                                            <Link href={`/p/${proposal.share_id}`} target="_blank">
-                                                <Button variant="ghost" size="icon" className="h-12 w-12 rounded-none hover:bg-black hover:text-white transition-all border border-transparent hover:border-black">
-                                                    <Eye className="w-5 h-5" />
-                                                </Button>
-                                            </Link>
-                                            <a href={`/api/proposals/${proposal.id}/pdf`}>
-                                                <Button variant="ghost" size="icon" className="h-12 w-12 rounded-none hover:bg-black hover:text-white transition-all border border-transparent hover:border-black">
-                                                    <Download className="w-5 h-5" />
-                                                </Button>
-                                            </a>
-                                            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-none border border-black group-hover:bg-black group-hover:text-white transition-all">
-                                                <Share2 className="w-5 h-5" />
-                                            </Button>
+                                            {proposal.status === 'released' ? (
+                                                <>
+                                                    <Link href={`/p/${proposal.share_id}`} target="_blank">
+                                                        <Button variant="ghost" size="icon" title="Ver Link Público" className="h-12 w-12 rounded-none hover:bg-black hover:text-white transition-all border border-transparent hover:border-black">
+                                                            <Eye className="w-5 h-5" />
+                                                        </Button>
+                                                    </Link>
+                                                    <a href={`/api/proposals/${proposal.id}/pdf`}>
+                                                        <Button variant="ghost" size="icon" title="Baixar PDF" className="h-12 w-12 rounded-none hover:bg-black hover:text-white transition-all border border-transparent hover:border-black">
+                                                            <Download className="w-5 h-5" />
+                                                        </Button>
+                                                    </a>
+                                                    <Button variant="ghost" size="icon" title="Compartilhar" className="h-12 w-12 rounded-none border border-black hover:bg-black hover:text-white transition-all">
+                                                        <Share2 className="w-5 h-5" />
+                                                    </Button>
+                                                </>
+                                            ) : (
+                                                <div className="flex items-center gap-6">
+                                                    <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground px-3 py-1 bg-secondary border border-border">
+                                                        {proposal.status === 'draft' ? 'Rascunho' : 'Aguardando Liberação'}
+                                                    </span>
+                                                    {credits?.balance && credits.balance > 0 ? (
+                                                        <Link href="/checkout">
+                                                            <Button className="premium-button h-12 text-[10px] px-6">
+                                                                Usar um crédito
+                                                            </Button>
+                                                        </Link>
+                                                    ) : (
+                                                        <Link href="/checkout">
+                                                            <Button className="premium-button h-12 text-[10px] px-6">
+                                                                Comprar mais créditos
+                                                            </Button>
+                                                        </Link>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

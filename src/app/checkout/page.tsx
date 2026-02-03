@@ -1,88 +1,118 @@
 'use client'
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Lock, CreditCard, ChevronRight, Loader2, CheckCircle2, ShieldCheck, Zap } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Lock, ChevronRight, Loader2, ShieldCheck, Zap, CreditCard, Mail, User, Check } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { createProposal } from '@/app/actions/proposals'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
+import { toast } from 'sonner'
+import { Elements } from '@stripe/react-stripe-js'
+import { loadStripe } from '@stripe/stripe-js'
+import StripeForm from '@/components/StripeForm'
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 export default function CheckoutPage() {
     const [loading, setLoading] = useState(false)
-    const [success, setSuccess] = useState(false)
+    const [user, setUser] = useState<any>(null)
     const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('temp-password-123')
+    const [password, setPassword] = useState('')
     const [name, setName] = useState('')
+    const [clientSecret, setClientSecret] = useState<string | null>(null)
+    const [proposalId, setProposalId] = useState<string | null>(null)
+    const [step, setStep] = useState<'auth' | 'billing' | 'success'>('auth')
+
     const supabase = createClient()
 
-    const handleProcess = async (e: React.FormEvent) => {
+    useEffect(() => {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
+                setUser(user)
+                setStep('billing')
+                prepareProposal(user.id)
+            }
+        })
+    }, [])
+
+    const prepareProposal = async (userId: string) => {
+        const pendingData = localStorage.getItem('pending_proposal')
+        if (pendingData) {
+            try {
+                const parsedData = JSON.parse(pendingData)
+                const newProposal = await createProposal({ ...parsedData, user_id: userId })
+                setProposalId(newProposal.id)
+                localStorage.removeItem('pending_proposal')
+
+                // Get Stripe SetupIntent after creating proposal
+                fetchClientSecret()
+            } catch (e) {
+                console.error('Error migrating proposal:', e)
+            }
+        }
+    }
+
+    const fetchClientSecret = async () => {
+        const res = await fetch('/api/billing/setup', { method: 'POST' })
+        const data = await res.json()
+        if (data.clientSecret) {
+            setClientSecret(data.clientSecret)
+        }
+    }
+
+    const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
-
         try {
-            const { data: authData, error: authError } = await supabase.auth.signUp({
+            const { data: authData, error } = await supabase.auth.signUp({
                 email,
                 password,
-                options: {
-                    data: { full_name: name }
-                }
+                options: { data: { full_name: name } }
             })
-
-            if (authError) throw authError
-
-            const pendingData = localStorage.getItem('pending_proposal')
-            if (pendingData) {
-                const parsedData = JSON.parse(pendingData)
-                await createProposal(parsedData)
-                localStorage.removeItem('pending_proposal')
-            }
-
-            setSuccess(true)
+            if (error) throw error
+            setUser(authData.user)
+            setStep('billing')
+            await prepareProposal(authData.user!.id)
         } catch (err: any) {
-            console.error(err)
-            alert(err.message || 'Erro ao processar. Tente novamente.')
+            toast.error(err.message)
         } finally {
             setLoading(false)
         }
     }
 
-    if (success) {
+    const handleRelease = async () => {
+        if (!proposalId) return
+        setLoading(true)
+        try {
+            const res = await fetch(`/api/proposals/${proposalId}/release`, { method: 'POST' })
+            const data = await res.json()
+            if (data.success) {
+                toast.success('PDF gerado com sucesso.')
+                setStep('success')
+            } else {
+                toast.error(data.error || 'Algo deu errado. Tente novamente.')
+            }
+        } catch (err) {
+            toast.error('Algo deu errado. Tente novamente.')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    if (step === 'success') {
         return (
-            <div className="min-h-screen flex items-center justify-center p-8 bg-background selection:bg-black selection:text-white">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                    className="max-w-md w-full text-center space-y-12"
-                >
-                    <div className="relative inline-block">
-                        <div className="w-24 h-24 bg-black text-white rounded-full flex items-center justify-center mx-auto">
-                            <ShieldCheck className="w-12 h-12" />
-                        </div>
-                        <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 0.3 }}
-                            className="absolute -right-2 -top-2 w-8 h-8 bg-black border-4 border-white rounded-full flex items-center justify-center"
-                        >
-                            <Zap className="w-4 h-4 text-white" />
-                        </motion.div>
+            <div className="min-h-screen flex items-center justify-center p-8 bg-background">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-md w-full text-center space-y-8">
+                    <div className="w-20 h-20 bg-black flex items-center justify-center mx-auto">
+                        <Check className="text-white w-10 h-10" />
                     </div>
-                    <div className="space-y-4">
-                        <h1 className="text-5xl font-serif tracking-tighter">Autoridade concedida.</h1>
-                        <p className="text-muted-foreground font-serif text-xl italic opacity-60">
-                            "Sua proposta foi processada e está pronta para fechar o negócio."
-                        </p>
-                    </div>
+                    <h1 className="text-4xl font-serif">Sua proposta está pronta para envio.</h1>
+                    <p className="text-muted-foreground italic font-serif">O PDF foi gerado e está disponível no seu dashboard.</p>
                     <Link href="/dashboard" className="block">
-                        <Button size="lg" className="premium-button w-full h-16 group">
-                            Ir para o Dashboard <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                        </Button>
+                        <Button className="premium-button w-full h-16">Ir para o Dashboard</Button>
                     </Link>
                 </motion.div>
             </div>
@@ -91,139 +121,82 @@ export default function CheckoutPage() {
 
     return (
         <div className="min-h-screen flex flex-col lg:flex-row bg-background selection:bg-black selection:text-white">
-            {/* Left Column: Context & Brand */}
-            <div className="lg:w-1/2 p-12 md:p-24 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-border relative overflow-hidden">
-                <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-secondary rounded-full opacity-30 blur-[100px]"></div>
-
-                <div className="relative z-10 space-y-24">
-                    <Link href="/" className="font-serif text-3xl tracking-tighter hover:opacity-70 transition-opacity inline-block">
-                        PROPOSE<span className="font-sans font-bold italic tracking-tight">KIT</span>
+            {/* Branding Column */}
+            <div className="lg:w-1/2 p-12 md:p-24 flex flex-col justify-between border-r border-border bg-white relative">
+                <div className="space-y-24">
+                    <Link href="/" className="font-serif text-3xl tracking-tighter">
+                        PROPOSE<span className="font-sans font-bold italic">KIT</span>
                     </Link>
-
-                    <div className="space-y-12 max-w-lg">
-                        <h2 className="text-6xl md:text-7xl font-serif tracking-tighter leading-tight">
-                            A clareza gera confiança. <br /> A confiança gera <span className="italic">lucro</span>.
+                    <div className="space-y-8">
+                        <h2 className="text-5xl md:text-7xl font-serif tracking-tighter leading-tight">
+                            Transforme uma conversa em uma proposta pronta.
                         </h2>
-
-                        <div className="space-y-8 py-12">
-                            <div className="flex gap-6 items-start">
-                                <CheckCircle2 className="w-6 h-6 mt-1 opacity-20" />
-                                <div>
-                                    <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold mb-2">Padrão Editorial</h3>
-                                    <p className="font-serif text-lg text-muted-foreground italic">Sua proposta organizada em um layout de alto impacto visual.</p>
-                                </div>
-                            </div>
-                            <Separator className="bg-black/5" />
-                            <div className="flex gap-6 items-start">
-                                <CheckCircle2 className="w-6 h-6 mt-1 opacity-20" />
-                                <div>
-                                    <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold mb-2">Crédito Aplicado</h3>
-                                    <p className="font-serif text-lg text-muted-foreground italic">Você está usando 1 crédito de boas-vindas. Custo zero hoje.</p>
-                                </div>
-                            </div>
-                            <Separator className="bg-black/5" />
-                            <div className="flex gap-6 items-start">
-                                <CheckCircle2 className="w-6 h-6 mt-1 opacity-20" />
-                                <div>
-                                    <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold mb-2">Status Premium</h3>
-                                    <p className="font-serif text-lg text-muted-foreground italic">Acesso total ao editor e dashboard de acompanhamento.</p>
-                                </div>
-                            </div>
-                        </div>
+                        <p className="text-xl text-muted-foreground font-serif italic opacity-60">
+                            Faltam poucos passos para você ter seu PDF em mãos.
+                        </p>
                     </div>
-                </div>
-
-                <div className="relative z-10 flex items-center gap-4 text-[10px] font-sans uppercase tracking-[0.4em] text-muted-foreground font-bold opacity-40">
-                    <Lock className="w-3 h-3" /> Encrypted Transaction Node
                 </div>
             </div>
 
-            {/* Right Column: Checkout Form */}
-            <div className="lg:w-1/2 bg-secondary/30 p-12 md:p-24 flex items-center justify-center relative">
-                <div className="max-w-md w-full space-y-16">
-                    <div className="space-y-8">
-                        <div className="space-y-2">
-                            <Label className="font-sans text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold">Identidade</Label>
-                            <div className="space-y-6">
-                                <input
-                                    type="text"
-                                    placeholder="Seu Nome Completo"
-                                    className="input-minimal"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    autoFocus
-                                />
-                                <input
-                                    type="email"
-                                    placeholder="E-mail Profissional"
-                                    className="input-minimal"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-8">
-                            <Label className="font-sans text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold">Segurança & Pagamento</Label>
-                            <Card className="p-10 border-black rounded-none shadow-2xl space-y-8 bg-white">
-                                <div className="flex items-center gap-6 border-b border-border pb-6 focus-within:border-black transition-colors">
-                                    <CreditCard className="w-6 h-6 opacity-20" />
-                                    <input
-                                        type="text"
-                                        placeholder="0000 0000 0000 0000"
-                                        className="bg-transparent outline-none w-full font-mono text-lg tracking-widest placeholder:opacity-20"
-                                        maxLength={19}
-                                    />
+            {/* Action Column */}
+            <div className="lg:w-1/2 bg-secondary/10 p-12 md:p-24 flex items-center justify-center">
+                <div className="max-w-md w-full">
+                    <AnimatePresence mode="wait">
+                        {step === 'auth' ? (
+                            <motion.div key="auth" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12">
+                                <div className="space-y-2">
+                                    <h3 className="text-3xl font-serif italic text-balance">Crie sua conta para liberar a proposta.</h3>
+                                    <p className="text-sm text-muted-foreground">O acesso oficial requer uma identidade validada.</p>
                                 </div>
-                                <div className="grid grid-cols-2 gap-12">
-                                    <div className="border-b border-border pb-6 focus-within:border-black transition-colors">
-                                        <input
-                                            type="text"
-                                            placeholder="MM/YY"
-                                            className="bg-transparent outline-none w-full font-mono text-lg tracking-widest placeholder:opacity-20"
-                                        />
+                                <form onSubmit={handleAuth} className="space-y-6">
+                                    <div className="space-y-4">
+                                        <div className="relative">
+                                            <input type="text" placeholder="Nome Completo" className="input-minimal" value={name} onChange={e => setName(e.target.value)} required />
+                                        </div>
+                                        <div className="relative">
+                                            <input type="email" placeholder="E-mail" className="input-minimal" value={email} onChange={e => setEmail(e.target.value)} required />
+                                        </div>
+                                        <div className="relative">
+                                            <input type="password" placeholder="Senha" className="input-minimal" value={password} onChange={e => setPassword(e.target.value)} required />
+                                        </div>
                                     </div>
-                                    <div className="border-b border-border pb-6 focus-within:border-black transition-colors">
-                                        <input
-                                            type="text"
-                                            placeholder="CVC"
-                                            className="bg-transparent outline-none w-full font-mono text-lg tracking-widest placeholder:opacity-20"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="pt-4 text-center">
-                                    <p className="text-[10px] font-sans uppercase tracking-[0.2em] text-muted-foreground opacity-60">
-                                        Total: <span className="text-black font-bold">R$ 0,00</span> (Crédito Aplicado)
+                                    <Button className="w-full premium-button h-16" disabled={loading}>
+                                        {loading ? <Loader2 className="animate-spin" /> : 'Continuar'}
+                                    </Button>
+                                </form>
+                            </motion.div>
+                        ) : (
+                            <motion.div key="billing" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-12">
+                                <div className="space-y-6 text-center">
+                                    <h3 className="text-3xl font-serif">Libere sua proposta completa.</h3>
+                                    <p className="text-muted-foreground font-serif italic">
+                                        Para acessar o PDF final da sua proposta, confirme seus dados de pagamento.
+                                        Você tem 1 proposta gratuita. Nenhuma cobrança será feita agora.
                                     </p>
                                 </div>
-                            </Card>
-                            <p className="text-[10px] text-muted-foreground italic text-center max-w-xs mx-auto leading-relaxed">
-                                * Para garantir a integridade da plataforma, solicitamos a validação de um meio de pagamento. Nenhuma cobrança será efetuada agora.
-                            </p>
-                        </div>
-                    </div>
 
-                    <Button
-                        size="lg"
-                        className="premium-button w-full h-20 text-sm group relative overflow-hidden"
-                        onClick={handleProcess}
-                        disabled={loading || !email || !name}
-                    >
-                        {loading ? (
-                            <Loader2 className="w-6 h-6 animate-spin" />
-                        ) : (
-                            <span className="flex items-center justify-center gap-2 group-hover:tracking-[0.2em] transition-all duration-500">
-                                Finalizar e Liberar Acesso <ChevronRight className="w-5 h-5" />
-                            </span>
+                                {clientSecret && (
+                                    <Elements stripe={stripePromise} options={{ clientSecret }}>
+                                        <StripeForm clientSecret={clientSecret} onSuccess={handleRelease} />
+                                    </Elements>
+                                ) || (
+                                        <div className="h-60 flex items-center justify-center">
+                                            <Loader2 className="animate-spin text-muted-foreground opacity-20" />
+                                        </div>
+                                    )}
+
+                                <div className="pt-6 border-t border-border space-y-4">
+                                    <div className="flex items-center gap-3 justify-center text-[10px] uppercase tracking-widest font-bold opacity-40">
+                                        <ShieldCheck className="w-4 h-4" />
+                                        Seus dados estão protegidos.
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground italic text-center">
+                                        Você só será cobrado se usar créditos adicionais. Nenhuma taxa de assinatura ou oculta.
+                                    </p>
+                                </div>
+                            </motion.div>
                         )}
-                    </Button>
-
-                    <div className="flex justify-center gap-8 opacity-20 grayscale">
-                        {/* Minimalist trust badge icons */}
-                        <div className="h-6 w-12 bg-black/10"></div>
-                        <div className="h-6 w-12 bg-black/10"></div>
-                        <div className="h-6 w-12 bg-black/10"></div>
-                    </div>
+                    </AnimatePresence>
                 </div>
             </div>
         </div>

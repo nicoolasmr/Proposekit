@@ -6,44 +6,36 @@ import { revalidatePath } from 'next/cache'
 export async function createProposal(formData: any) {
     const supabase = await createClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Unauthorized')
+    // Support passing user_id explicitly during migration from local storage
+    let userId = formData.user_id
 
-    // Check credits
-    const { data: credits } = await supabase
-        .from('credits')
-        .select('balance')
-        .eq('user_id', user.id)
-        .single()
-
-    if (!credits || credits.balance < 1) {
-        throw new Error('Insufficient credits')
+    if (!userId) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Unauthorized')
+        userId = user.id
     }
 
-    // Create proposal
+    // Create proposal as 'draft'
     const { data: proposal, error: proposalError } = await supabase
         .from('proposals')
         .insert({
-            user_id: user.id,
-            client_name: formData.client,
-            service_description: formData.service,
-            project_value: parseFloat(formData.value.replace(/[^0-9,]/g, '').replace(',', '.')) || 0,
+            user_id: userId,
+            client_name: formData.client || 'Cliente não identificado',
+            service_description: formData.service || 'Serviço não identificado',
+            project_value: typeof formData.value === 'string'
+                ? parseFloat(formData.value.replace(/[^0-9,]/g, '').replace(',', '.')) || 0
+                : formData.value,
             deadline: formData.deadline,
             payment_conditions: formData.payment,
-            status: 'completed'
+            status: 'draft' // Initial state
         })
         .select()
         .single()
 
-    if (proposalError) throw proposalError
-
-    // Deduct credit
-    const { error: creditError } = await supabase
-        .from('credits')
-        .update({ balance: credits.balance - 1 })
-        .eq('user_id', user.id)
-
-    if (creditError) throw creditError
+    if (proposalError) {
+        console.error('Proposal Error:', proposalError)
+        throw proposalError
+    }
 
     revalidatePath('/dashboard')
     return proposal

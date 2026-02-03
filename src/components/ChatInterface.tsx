@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
+import { createChatSession, saveChatMessage } from '@/app/actions/chat'
+import { createClient } from '@/lib/supabase/client'
 
 type Step = {
     id: string
@@ -29,18 +30,18 @@ const STEPS: Step[] = [
         question: 'Qual serviço você está oferecendo?',
         field: 'service',
         type: 'text',
-        placeholder: 'Ex: Consultoria de Marketing Digital'
+        placeholder: 'Consultoria, Design, Desenvolvimento...'
     },
     {
         id: 'client',
-        question: 'Para quem é a proposta?',
+        question: 'Para quem é essa proposta?',
         field: 'client',
         type: 'text',
-        placeholder: 'Ex: Acme Corp'
+        placeholder: 'Nome do cliente ou empresa'
     },
     {
         id: 'value',
-        question: 'Qual o valor total do projeto?',
+        question: 'Qual o valor do projeto?',
         field: 'value',
         type: 'text',
         placeholder: 'Ex: R$ 5.000,00'
@@ -54,7 +55,7 @@ const STEPS: Step[] = [
     },
     {
         id: 'payment',
-        question: 'Quais as condições de pagamento?',
+        question: 'Como será o pagamento?',
         field: 'payment',
         type: 'text',
         placeholder: 'Ex: 50% na entrada, 50% na entrega'
@@ -62,7 +63,7 @@ const STEPS: Step[] = [
 ]
 
 export default function ChatInterface() {
-    const [currentStep, setCurrentStep] = useState(0)
+    const [currentStep, setCurrentStep] = useState(-1) // -1 for initial message
     const [data, setData] = useState<ProposalData>({
         service: '',
         client: '',
@@ -71,28 +72,68 @@ export default function ChatInterface() {
         payment: ''
     })
     const [isFinished, setIsFinished] = useState(false)
+    const [isTransitioning, setIsTransitioning] = useState(false)
+    const [sessionId, setSessionId] = useState<string | null>(null)
+    const [user, setUser] = useState<any>(null)
     const inputRef = useRef<HTMLInputElement>(null)
+    const supabase = createClient()
 
     useEffect(() => {
-        inputRef.current?.focus()
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            setUser(user)
+        })
+    }, [])
+
+    useEffect(() => {
+        if (currentStep >= 0) {
+            inputRef.current?.focus()
+        }
     }, [currentStep])
 
-    const handleNext = () => {
+    const handleNext = async () => {
+        if (currentStep === -1) {
+            setCurrentStep(0)
+            return
+        }
+
+        const step = STEPS[currentStep]
+        const content = data[step.field]
+
+        // Persistence Logic
+        if (user) {
+            try {
+                let sid = sessionId
+                if (!sid) {
+                    sid = await createChatSession()
+                    setSessionId(sid)
+                }
+                if (sid) {
+                    await saveChatMessage(sid, 'user', content)
+                }
+            } catch (e) {
+                console.error('Error saving chat:', e)
+            }
+        }
+
         if (currentStep < STEPS.length - 1) {
             setCurrentStep(s => s + 1)
         } else {
-            setIsFinished(true)
+            setIsTransitioning(true)
+            // Transition message: "Perfeito. Estou organizando sua proposta."
+            setTimeout(() => {
+                setIsFinished(true)
+                setIsTransitioning(false)
+            }, 2000)
         }
     }
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && data[STEPS[currentStep].field]) {
+        if (e.key === 'Enter' && currentStep >= 0 && data[STEPS[currentStep].field]) {
             handleNext()
         }
     }
 
     if (isFinished) {
-        // Save to localStorage so checkout can pick it up
         if (typeof window !== 'undefined') {
             localStorage.setItem('pending_proposal', JSON.stringify(data))
         }
@@ -103,23 +144,55 @@ export default function ChatInterface() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                 >
-                    <Card className="p-12 border-2 border-black rounded-none">
-                        <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-8">
+                    <Card className="p-12 border border-border shadow-2xl rounded-none bg-white">
+                        <div className="w-16 h-16 bg-black flex items-center justify-center mx-auto mb-8">
                             <Check className="text-white w-8 h-8" />
                         </div>
-                        <h2 className="text-3xl mb-4 font-serif">Proposta Pronta.</h2>
+                        <h2 className="text-3xl mb-4 font-serif">Sua proposta está pronta.</h2>
                         <p className="text-muted-foreground mb-12 font-serif text-lg italic">
-                            "A clareza é o primeiro passo para o sim."
+                            Libere sua proposta completa para acesso imediato ao PDF.
                         </p>
                         <Button
                             size="lg"
-                            className="w-full premium-button h-14"
+                            className="w-full premium-button h-16"
                             onClick={() => window.location.href = '/checkout'}
                         >
-                            Liberar Proposta Completa
+                            Liberar agora
                         </Button>
                     </Card>
                 </motion.div>
+            </div>
+        )
+    }
+
+    if (isTransitioning) {
+        return (
+            <div className="max-w-2xl mx-auto px-6 py-40 text-center">
+                <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-2xl font-serif italic text-muted-foreground"
+                >
+                    Perfeito. Estou organizando sua proposta.
+                </motion.p>
+            </div>
+        )
+    }
+
+    if (currentStep === -1) {
+        return (
+            <div className="max-w-2xl mx-auto px-6 py-24 text-center space-y-12">
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-6"
+                >
+                    <h2 className="text-4xl md:text-5xl font-serif tracking-tight">Vamos criar sua proposta.</h2>
+                    <p className="text-xl text-muted-foreground font-serif italic">Responda algumas perguntas rápidas.</p>
+                </motion.div>
+                <Button onClick={handleNext} className="premium-button h-14 px-12">
+                    Começar
+                </Button>
             </div>
         )
     }
@@ -131,7 +204,7 @@ export default function ChatInterface() {
             <div className="space-y-16">
                 {/* Past messages */}
                 <div className="space-y-12">
-                    {STEPS.slice(0, currentStep).map((s, i) => (
+                    {STEPS.slice(0, currentStep).map((s) => (
                         <div key={s.id} className="space-y-2 opacity-30 border-l border-black/10 pl-6">
                             <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{s.question}</p>
                             <p className="font-serif text-xl">{data[s.field]}</p>
@@ -150,11 +223,11 @@ export default function ChatInterface() {
                         className="space-y-8"
                     >
                         <div className="flex items-center gap-4">
-                            <div className="h-px bg-black flex-grow"></div>
-                            <p className="font-sans text-[10px] uppercase tracking-[0.3em] font-bold">
-                                Pergunta {currentStep + 1} de {STEPS.length}
+                            <div className="h-px bg-black flex-grow opacity-10"></div>
+                            <p className="font-sans text-[10px] uppercase tracking-[0.3em] font-bold opacity-30">
+                                {currentStep + 1} de {STEPS.length}
                             </p>
-                            <div className="h-px bg-black flex-grow"></div>
+                            <div className="h-px bg-black flex-grow opacity-10"></div>
                         </div>
 
                         <h2 className="text-4xl md:text-5xl leading-tight text-center font-serif py-4">

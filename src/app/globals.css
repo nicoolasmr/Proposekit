@@ -1,52 +1,30 @@
 @import "tailwindcss";
-@import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
-@theme {
+:root {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-playfair);
-}
 
-:root {
   --background: oklch(0.99 0 0);
-  /* Off-white */
   --foreground: oklch(0.15 0 0);
-  /* Soft Black */
-
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.15 0 0);
-
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0 0);
-
   --primary: oklch(0.15 0 0);
   --primary-foreground: oklch(1 0 0);
-
   --secondary: oklch(0.96 0 0);
   --secondary-foreground: oklch(0.15 0 0);
-
   --muted: oklch(0.96 0 0);
   --muted-foreground: oklch(0.45 0 0);
-
-  --accent: oklch(0.96 0 0);
-  --accent-foreground: oklch(0.15 0 0);
-
-  --destructive: oklch(0.5 0.2 25);
-  --destructive-foreground: oklch(1 0 0);
-
   --border: oklch(0.92 0 0);
   --input: oklch(0.92 0 0);
-  --ring: oklch(0.15 0 0);
-
   --radius: 0rem;
-  /* Sharp corners for premium feel */
 }
 
 @layer base {
   body {
-    @apply bg-background text-foreground antialiased selection:bg-black selection:text-white;
+    background-color: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
   }
 
   h1,
@@ -55,66 +33,48 @@
   h4,
   h5,
   h6 {
-    @apply font-serif tracking-tight font-medium [text-wrap:balance];
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
   }
 }
 
 @layer components {
-
-  /* Keep my premium classes but base them on shadcn tokens if possible */
   .premium-card {
-    @apply bg-card border border-border rounded-none p-8 transition-[background-color, border-color, transform] duration-300;
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    padding: 2rem;
+    transition: background-color 0.3s, border-color 0.3s, transform 0.3s;
   }
 
   .premium-button {
-    @apply bg-primary text-primary-foreground px-8 py-3 font-sans tracking-wide uppercase text-xs transition-[opacity, transform, background-color] duration-300 hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:scale-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 outline-none;
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    padding: 0.75rem 2rem;
+    font-family: var(--font-sans);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    transition: opacity 0.3s, transform 0.3s, background-color 0.3s;
   }
 
-  .premium-button-outline {
-    @apply bg-transparent text-foreground border border-foreground px-8 py-3 font-sans tracking-wide uppercase text-xs transition-[background-color, color, transform] duration-300 hover:bg-foreground hover:text-background active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 outline-none;
+  .premium-button:hover {
+    opacity: 0.9;
+  }
+
+  .premium-button:active {
+    transform: scale(0.98);
   }
 
   .input-minimal {
-    @apply border-b border-border bg-transparent py-4 focus:border-foreground focus:ring-0 outline-none transition-[border-color] duration-300 w-full font-serif text-2xl md:text-3xl placeholder:opacity-30;
-  }
-
-  .content-auto {
-    content-visibility: auto;
-    contain-intrinsic-size: 0 100px;
-  }
-}
-
-@theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
+    border-bottom: 1px solid var(--border);
+    background-color: transparent;
+    padding: 1rem 0;
+    width: 100%;
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    outline: none;
+    transition: border-color 0.3s;
   }
 }

@@ -22,6 +22,8 @@ export const metadata: Metadata = {
   description: "Crie uma proposta profissional em minutos — direto no chat.",
 };
 
+import { Toaster } from "sonner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,9 +32,10 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased bg-[#FDFDFD] text-[#1A1A1A]`}
+        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
       >
         {children}
+        <Toaster position="top-center" expand={false} richColors />
       </body>
     </html>
   );

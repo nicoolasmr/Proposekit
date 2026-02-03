@@ -50,22 +50,22 @@ export default function LoginPage() {
                         <div className="w-12 h-12 border border-black/10 flex items-center justify-center mx-auto">
                             <Shield className="w-5 h-5 opacity-20" />
                         </div>
-                        <h1 className="text-5xl font-serif tracking-tighter">Retomar autoridade.</h1>
+                        <h1 className="text-5xl font-serif tracking-tighter">Acesse sua conta.</h1>
                         <p className="text-muted-foreground font-serif italic text-xl opacity-60">
-                            Gerencie seus negócios com precisão.
+                            Gerencie suas propostas e acompanhe seus fechamentos com precisão.
                         </p>
                     </div>
 
                     <form onSubmit={handleLogin} className="space-y-12">
                         {error && (
                             <div className="bg-red-50 text-red-600 p-6 text-[10px] font-sans uppercase tracking-[0.2em] font-bold text-center border border-red-100">
-                                {error}
+                                {error === 'Invalid login credentials' ? 'E-mail ou senha incorretos.' : error}
                             </div>
                         )}
 
                         <div className="space-y-8">
                             <div className="space-y-3">
-                                <Label className="text-[10px] uppercase tracking-[0.2em] font-bold opacity-40">Acesso</Label>
+                                <Label className="text-[10px] uppercase tracking-[0.2em] font-bold opacity-40">Identificação</Label>
                                 <input
                                     type="email"
                                     placeholder="E-mail"
@@ -96,7 +96,7 @@ export default function LoginPage() {
                             {loading ? (
                                 <Loader2 className="w-6 h-6 animate-spin" />
                             ) : (
-                                <>Entrar no Console <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" /></>
+                                <>Entrar no Dashboard <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" /></>
                             )}
                         </Button>
                     </form>
@@ -104,7 +104,7 @@ export default function LoginPage() {
                     <footer className="text-center space-y-8">
                         <p className="text-[10px] font-sans uppercase tracking-[0.2em] text-muted-foreground">
                             Novo por aqui?{' '}
-                            <Link href="/" className="text-black font-bold hover:underline">Sua primeira proposta é por nossa conta</Link>
+                            <Link href="/" className="text-black font-bold hover:underline">Use uma proposta gratuitamente</Link>
                         </p>
                         <div className="h-px bg-border max-w-[40px] mx-auto"></div>
                         <p className="text-[10px] text-muted-foreground opacity-30 tracking-[0.4em]">PROPOSEKIT CORE</p>
