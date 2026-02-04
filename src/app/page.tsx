@@ -28,11 +28,11 @@ export default function LandingPage() {
         {/* HERO SECTION - Editorial & High Authority */}
         <section className="pt-32 pb-56 px-8 md:px-16 text-center max-w-5xl mx-auto space-y-16">
           <div className="space-y-8">
-            <h1 className="text-7xl md:text-9xl font-serif tracking-tighter leading-[0.9]">
+            <h1 className="text-7xl md:text-9xl font-serif tracking-tighter leading-[0.9] text-balance">
               Propostas que <br /> fecham negócios.
             </h1>
-            <p className="text-2xl md:text-3xl text-muted-foreground font-serif italic max-w-3xl mx-auto opacity-70">
-              Transforme conversas em contratos profissionais com clareza editorial.
+            <p className="text-2xl md:text-3xl text-muted-foreground font-serif italic max-w-3xl mx-auto opacity-70 text-balance">
+              Transforme conversas simples em contratos de alta autoridade com precisão editorial.
             </p>
           </div>
 
@@ -58,16 +58,16 @@ export default function LandingPage() {
         {/* O PROBLEMA - Minimalist & Direct */}
         <section className="py-56 bg-secondary/30 border-y border-border px-8 md:px-16 text-center">
           <div className="max-w-4xl mx-auto space-y-16">
-            <h2 className="text-5xl md:text-7xl font-serif tracking-tighter leading-tight italic">
+            <h2 className="text-5xl md:text-7xl font-serif tracking-tighter leading-tight italic text-balance">
               O silêncio visual <br /> gera autoridade.
             </h2>
             <div className="space-y-12 max-w-2xl mx-auto">
-              <p className="text-2xl text-muted-foreground font-serif italic leading-relaxed">
-                Propostas poluídas geram hesitação. <br /> Hesitação mata contratos.
+              <p className="text-2xl text-muted-foreground font-serif italic leading-relaxed text-balance">
+                Propostas saturadas geram hesitação. <br /> A clareza elimina fricção e acelera a decisão.
               </p>
               <Separator className="w-16 bg-foreground/10 mx-auto" />
-              <p className="text-xl text-muted-foreground font-serif italic opacity-60">
-                O ProposeKit elimina o ruído e foca no que importa: <br /> o valor do seu trabalho apresentado com precisão.
+              <p className="text-xl text-muted-foreground font-serif italic opacity-60 text-balance">
+                O ProposeKit remove o ruído desnecessário para que seu cliente foque <br /> no único elemento que importa: o valor do seu trabalho.
               </p>
             </div>
           </div>
@@ -79,22 +79,36 @@ export default function LandingPage() {
             <div className="space-y-32">
               <div className="grid md:grid-cols-2 gap-24 items-center">
                 <div className="space-y-6">
-                  <span className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] opacity-30">01 / Abordagem</span>
-                  <h3 className="text-4xl font-serif italic tracking-tight">Você conversa.</h3>
-                  <p className="text-muted-foreground font-serif text-xl italic opacity-70 border-l border-border pl-8">
-                    Responda perguntas essenciais em uma interface focada, livre de distrações.
+                  <span className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] opacity-30">01 / Diálogo</span>
+                  <h3 className="text-4xl font-serif italic tracking-tight text-balance">Defina o escopo com fluidez.</h3>
+                  <p className="text-muted-foreground font-serif text-xl italic opacity-70 border-l border-border pl-8 text-balance">
+                    Responda a perguntas estratégicas em uma interface imersiva, desenhada para extrair o melhor do seu projeto.
                   </p>
                 </div>
-                <div className="aspect-square bg-white border border-border/50 shadow-2xl opacity-50"></div>
+                <div className="aspect-video bg-secondary/20 border border-border/50 shadow-2xl relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/5 group-hover:bg-transparent transition-colors duration-500" />
+                  <div className="p-8 flex items-center justify-center h-full">
+                    <div className="w-full h-2 bg-foreground/5 rounded-full overflow-hidden">
+                      <div className="w-1/3 h-full bg-foreground/20 animate-pulse" />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-24 items-center">
-                <div className="aspect-square bg-white border border-border/50 shadow-2xl opacity-50 md:order-last"></div>
+                <div className="aspect-video bg-secondary/20 border border-border/50 shadow-2xl md:order-last relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent to-black/5 group-hover:bg-transparent transition-colors duration-500" />
+                  <div className="p-8 space-y-4">
+                    <div className="h-4 w-3/4 bg-foreground/10 rounded" />
+                    <div className="h-4 w-1/2 bg-foreground/5 rounded" />
+                    <div className="h-4 w-5/6 bg-foreground/5 rounded" />
+                  </div>
+                </div>
                 <div className="space-y-6 text-right md:pr-12">
-                  <span className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] opacity-30">02 / Curadoria</span>
-                  <h3 className="text-4xl font-serif italic tracking-tight">O sistema organiza.</h3>
-                  <p className="text-muted-foreground font-serif text-xl italic opacity-70 border-r border-border pr-8">
-                    Seus dados são estruturados automaticamente em um layout editorial de alta autoridade.
+                  <span className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] opacity-30">02 / Transformação</span>
+                  <h3 className="text-4xl font-serif italic tracking-tight text-balance">Curadoria editorial instantânea.</h3>
+                  <p className="text-muted-foreground font-serif text-xl italic opacity-70 border-r border-border pr-8 text-balance">
+                    Suas respostas são estruturadas automaticamente em um documento de alto impacto visual e argumentativo.
                   </p>
                 </div>
               </div>
@@ -109,18 +123,18 @@ export default function LandingPage() {
               Assine com <br /> confiança.
             </h2>
             <div className="space-y-8">
-              <p className="text-2xl font-serif italic opacity-60">
-                Experimente sua primeira proposta gratuitamente.
+              <p className="text-2xl font-serif italic opacity-60 text-balance">
+                Crie sua primeira proposta agora. Sem necessidade de cartão de crédito.
               </p>
               <div className="pt-12">
-                <Button className="h-20 px-20 text-base bg-white text-black hover:bg-white/90 uppercase tracking-[0.3em]" onClick={() => {
+                <Button className="h-20 px-20 text-base bg-white text-black hover:bg-white/90 uppercase tracking-[0.3em] transition-all hover:tracking-[0.4em]" onClick={() => {
                   const chat = document.getElementById('chat-start')
                   chat?.scrollIntoView({ behavior: 'smooth' })
                 }}>
-                  Iniciar agora
+                  Começar gratuitamente
                 </Button>
                 <p className="mt-12 text-[10px] uppercase font-sans tracking-[0.4em] opacity-30">
-                  Acesso imediato. Sem taxas ocultas.
+                  Acesso imediato à interface de curadoria.
                 </p>
               </div>
             </div>
