@@ -4,25 +4,14 @@ import ChatInterface from '@/components/ChatInterface'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import Image from 'next/image'
+import { Header } from '@/components/Header'
 import { Separator } from '@/components/ui/separator'
 
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen selection:bg-black selection:text-white bg-background">
-      {/* Header - Minimalist & Silent */}
-      <header className="py-12 px-8 md:px-16 flex justify-between items-center bg-background sticky top-0 z-50 border-b border-border/40">
-        <Link href="/" className="font-serif text-2xl tracking-tighter hover:opacity-70 transition-opacity flex items-center gap-2 italic">
-          PROPOSE<span className="font-sans font-bold not-italic tracking-normal">KIT</span>
-        </Link>
-        <nav className="flex items-center gap-12">
-          <Link href="/login" className="text-[10px] font-sans tracking-[0.3em] uppercase font-bold hover:opacity-50 transition-opacity">Login</Link>
-          <Link href="/checkout">
-            <Button variant="premium-outline" size="sm">
-              Criar Proposta
-            </Button>
-          </Link>
-        </nav>
-      </header>
+      <Header />
 
       <main className="flex-grow">
         {/* HERO SECTION - Editorial & High Authority */}
@@ -86,23 +75,25 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="aspect-video bg-secondary/20 border border-border/50 shadow-2xl relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/5 group-hover:bg-transparent transition-colors duration-500" />
-                  <div className="p-8 flex items-center justify-center h-full">
-                    <div className="w-full h-2 bg-foreground/5 rounded-full overflow-hidden">
-                      <div className="w-1/3 h-full bg-foreground/20 animate-pulse" />
-                    </div>
-                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/5 group-hover:bg-transparent transition-colors duration-500 z-10" />
+                  <Image
+                    src="/dialogue-interface.png"
+                    alt="Interface de diálogo fluida"
+                    fill
+                    className="object-cover object-center opacity-90 group-hover:scale-105 transition-transform duration-700"
+                  />
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-24 items-center">
                 <div className="aspect-video bg-secondary/20 border border-border/50 shadow-2xl md:order-last relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent to-black/5 group-hover:bg-transparent transition-colors duration-500" />
-                  <div className="p-8 space-y-4">
-                    <div className="h-4 w-3/4 bg-foreground/10 rounded" />
-                    <div className="h-4 w-1/2 bg-foreground/5 rounded" />
-                    <div className="h-4 w-5/6 bg-foreground/5 rounded" />
-                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent to-black/5 group-hover:bg-transparent transition-colors duration-500 z-10" />
+                  <Image
+                    src="/editorial-curation.png"
+                    alt="Curadoria editorial instantânea"
+                    fill
+                    className="object-cover object-center opacity-90 group-hover:scale-105 transition-transform duration-700"
+                  />
                 </div>
                 <div className="space-y-6 text-right md:pr-12">
                   <span className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] opacity-30">02 / Transformação</span>

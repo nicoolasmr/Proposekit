@@ -11,22 +11,35 @@ import { toast } from 'sonner'
 
 export default function LoginPage() {
     const [loading, setLoading] = useState(false)
+    const [isSignUp, setIsSignUp] = useState(false)
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const router = useRouter()
     const supabase = createClient()
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
         try {
-            const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            })
-            if (error) throw error
-            router.push('/dashboard')
-            router.refresh()
+            if (isSignUp) {
+                const { error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        emailRedirectTo: `${location.origin}/auth/callback`,
+                    },
+                })
+                if (error) throw error
+                toast.success('Conta criada! Verifique seu email para confirmar.')
+            } else {
+                const { error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                })
+                if (error) throw error
+                router.push('/dashboard')
+                router.refresh()
+            }
         } catch (err: any) {
             toast.error(err.message)
         } finally {
@@ -57,14 +70,18 @@ export default function LoginPage() {
             </div>
 
             {/* Login Column */}
-            <div className="lg:w-1/2 bg-secondary/20 p-16 md:p-32 flex items-center justify-center">
+            <div className="lg:w-1/2 bg-secondary/20 p-16 md:p-32 flex items-center justify-center transition-all duration-500">
                 <div className="max-w-md w-full space-y-20">
                     <div className="space-y-6">
-                        <h2 className="text-4xl font-serif italic tracking-tighter">Entrar no sistema.</h2>
-                        <p className="text-[11px] uppercase tracking-[0.4em] font-bold opacity-30">Controle total sobre suas negociações profissionais.</p>
+                        <h2 className="text-4xl font-serif italic tracking-tighter">
+                            {isSignUp ? 'Criar nova conta.' : 'Entrar no sistema.'}
+                        </h2>
+                        <p className="text-[11px] uppercase tracking-[0.4em] font-bold opacity-30">
+                            {isSignUp ? 'Comece a fechar negócios mais rápido.' : 'Controle total sobre suas negociações profissionais.'}
+                        </p>
                     </div>
 
-                    <form onSubmit={handleLogin} className="space-y-16">
+                    <form onSubmit={handleSubmit} className="space-y-16">
                         <div className="space-y-12">
                             <div className="space-y-2">
                                 <label className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-30">E-mail Corporativo</label>
@@ -80,7 +97,9 @@ export default function LoginPage() {
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center">
                                     <label className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-30">Senha</label>
-                                    <Link href="#" className="text-[9px] uppercase tracking-[0.3em] font-bold opacity-20 hover:opacity-100 transition-all">Recuperar</Link>
+                                    {!isSignUp && (
+                                        <Link href="#" className="text-[9px] uppercase tracking-[0.3em] font-bold opacity-20 hover:opacity-100 transition-all">Recuperar</Link>
+                                    )}
                                 </div>
                                 <input
                                     type="password"
@@ -89,20 +108,28 @@ export default function LoginPage() {
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
                                     required
+                                    minLength={6}
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-12">
                             <Button variant="premium" className="w-full h-20 text-base" disabled={loading}>
-                                {loading ? <Loader2 className="animate-spin w-6 h-6" /> : 'Acessar Console'}
+                                {loading ? <Loader2 className="animate-spin w-6 h-6" /> : (isSignUp ? 'Criar Conta' : 'Acessar Console')}
                             </Button>
 
                             <div className="text-center space-y-4">
-                                <p className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-20">Ainda não possui acesso?</p>
-                                <Link href="/" className="block">
-                                    <Button variant="premium-outline" className="w-full h-16 text-xs">Criar Minha Primeira Proposta</Button>
-                                </Link>
+                                <p className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-20">
+                                    {isSignUp ? 'Já possui acesso?' : 'Ainda não possui acesso?'}
+                                </p>
+                                <Button
+                                    type="button"
+                                    variant="premium-outline"
+                                    onClick={() => setIsSignUp(!isSignUp)}
+                                    className="w-full h-16 text-xs"
+                                >
+                                    {isSignUp ? 'Entrar na minha conta' : 'Criar minha conta'}
+                                </Button>
                             </div>
                         </div>
                     </form>
