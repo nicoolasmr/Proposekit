@@ -2,7 +2,9 @@
 
 **"Propostas claras fecham negócios mais rápido."**
 
-ProposeKit é um gerador de propostas comerciais premium, minimalista e orientado a conversão, projetado para freelancers, consultores e agências que desejam transmitir autoridade e profissionalismo em cada contrato.
+**"Propostas claras fecham negócios mais rápido."**
+
+ProposeKit é um gerador de propostas comerciais premium com **Closing Kit integrado**, projetado para freelancers e agências que não querem apenas enviar PDFs, mas fechar contratos e receber pagamentos instantaneamente.
 
 ## 💎 A Proposta de Valor
 
@@ -12,6 +14,10 @@ Diferente de ferramentas tradicionais de formulários ou editores de texto gené
 - **Fluxo Chat-First**: Crie sua proposta em minutos através de uma conversa fluida.
 - **Design Editorial Premium**: Tipografia serifada de alto contraste (Playfair Display) e estética "sharp edge".
 - **Sistema de Créditos & Paywall**: Modelo de acesso baseado em valor (1 crédito gratuito inicial).
+- **Fluxo Chat-First**: Crie sua proposta em minutos através de uma conversa fluida.
+- **Closing Kit (Novidade)**: Aceite digital e Pagamento de Entrada (Pix) integrados no link da proposta.
+- **Design Editorial Premium**: Tipografia serifada de alto contraste (Playfair Display) e estética "sharp edge".
+- **Controle de Escopo**: Gere aditivos de contrato (Change Requests) para aprovação rápida.
 - **Geração de PDF Offline**: Documentos impecáveis prontos para impressão ou envio.
 
 ## 🚀 Tecnologias
@@ -27,7 +33,9 @@ Diferente de ferramentas tradicionais de formulários ou editores de texto gené
 1.  **Home Page Inteligente**: Um chat central que guia o usuário pela criação da proposta antes mesmo do login.
 2.  **Checkout de Segurança**: Fluxo de captura de leads e validação de cartão para desbloqueio de créditos.
 3.  **Dashboard de Controle**: Console central para gerenciar propostas, acompanhar visualizações e baixar documentos.
-4.  **Public Preview**: Link público elegante para compartilhamento direto com o cliente final.
+3.  **Dashboard de Controle**: Console central para gerenciar propostas, acompanhar visualizações e baixar documentos.
+4.  **Closing Dashboard**: Gerencie aceites, pagamentos Pix e aditivos de escopo em um só lugar.
+5.  **Public Preview**: Link público elegante para compartilhamento direto com o cliente final.
 5.  **Multi-tenant & RLS**: Segurança total de dados garantida por Row Level Security no Supabase.
 
 ## 📦 Instalação e Execução

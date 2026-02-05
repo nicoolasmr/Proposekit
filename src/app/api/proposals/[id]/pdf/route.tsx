@@ -1,6 +1,7 @@
 import React from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { ProposalPDF } from '@/components/ProposalPDF'
+import { generateProposalText } from '@/lib/proposal-engine'
 import { renderToStream } from '@react-pdf/renderer'
 import { NextResponse } from 'next/server'
 
@@ -43,20 +44,18 @@ export async function GET(
             })
         }
 
-        // 4. Generate new PDF
-        const pdfData = {
-            client_name: proposal.client_name,
-            service_description: proposal.service_description,
-            project_value: `R$ ${proposal.project_value?.toLocaleString('pt-BR') || '0,00'}`,
-            deadline: proposal.deadline,
-            payment_conditions: proposal.payment_conditions,
-            date: new Date(proposal.created_at).toLocaleDateString('pt-BR')
-        }
+        // 4. Generate formatted text using the Engine
+        // Casting props to 'any' temporarily because typescript definitions of 'proposals' table 
+        // might not be updated yet with the new columns, but we assume the data is there or null.
+        const content = generateProposalText(proposal as any)
 
-        const stream = await renderToStream(<ProposalPDF data={pdfData} />)
-
-        // Note: For background upload, we might need to convert stream to buffer anyway
-        // but for the response, stream is fine.
+        // 5. Generate new PDF
+        const stream = await renderToStream(
+            <ProposalPDF
+                content={content}
+                clientName={proposal.client_name}
+            />
+        )
 
         return new Response(stream as any, {
             headers: {

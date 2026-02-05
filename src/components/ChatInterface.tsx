@@ -9,76 +9,193 @@ import { Separator } from '@/components/ui/separator'
 import { createChatSession, saveChatMessage } from '@/app/actions/chat'
 import { createClient } from '@/lib/supabase/client'
 
+type ProposalData = {
+    client_name: string
+    title: string
+    objective: string
+    urgency_reason: string
+    cost_of_inaction: string
+    previous_attempts: string
+    scope: string
+    out_of_scope: string
+    revisions: string
+    decision_maker: string
+    communication: string
+    dependencies: string
+    total_value: string
+    payment_terms: string
+    timeline: string
+    // Closing Kit
+    closing_opt_in?: string
+    deposit_amount?: string
+    pix_key?: string
+}
+
 type Step = {
     id: string
     question: string
     field: keyof ProposalData
-    type: 'text' | 'number' | 'date'
     placeholder: string
     feedback: string
 }
 
-type ProposalData = {
-    service: string
-    client: string
-    value: string
-    deadline: string
-    payment: string
-}
-
 const STEPS: Step[] = [
+    // BLOCO 1 — CONTEXTO
     {
-        id: 'service',
-        question: 'Qual serviço você está oferecendo?',
-        field: 'service',
-        type: 'text',
-        placeholder: 'Consultoria, Design, Desenvolvimento...',
+        id: 'client_name',
+        question: 'Para quem é essa proposta?',
+        field: 'client_name',
+        placeholder: 'Nome do cliente ou empresa',
+        feedback: 'Certo.'
+    },
+    {
+        id: 'title',
+        question: 'Como você descreveria esse projeto ou serviço?',
+        field: 'title',
+        placeholder: 'Ex: Consultoria de Marketing Estratégico',
         feedback: 'Entendi.'
     },
     {
-        id: 'client',
-        question: 'Para quem é essa proposta?',
-        field: 'client',
-        type: 'text',
-        placeholder: 'Nome do cliente ou empresa',
+        id: 'objective',
+        question: 'O que esse cliente espera resolver ou conquistar com esse projeto?',
+        field: 'objective',
+        placeholder: 'Qual o principal objetivo?',
+        feedback: 'Ótimo.'
+    },
+    // BLOCO 2 — VALOR
+    {
+        id: 'urgency_reason',
+        question: 'Por que esse projeto é importante agora?',
+        field: 'urgency_reason',
+        placeholder: 'Existe algum gatilho de urgência?',
+        feedback: 'Compreendo.'
+    },
+    {
+        id: 'cost_of_inaction',
+        question: 'O que acontece se isso não for feito neste momento?',
+        field: 'cost_of_inaction',
+        placeholder: 'Riscos ou perdas envolvidas',
+        feedback: 'Entendi.'
+    },
+    {
+        id: 'previous_attempts',
+        question: 'Eles já tentaram algo parecido antes?',
+        field: 'previous_attempts',
+        placeholder: 'Histórico de tentativas',
+        feedback: 'Certo.'
+    },
+    // BLOCO 3 — ESCOPO
+    {
+        id: 'scope',
+        question: 'O que exatamente você vai entregar nesse projeto?',
+        field: 'scope',
+        placeholder: 'Principais entregáveis',
         feedback: 'Perfeito.'
     },
     {
-        id: 'value',
-        question: 'Qual o valor do projeto?',
-        field: 'value',
-        type: 'text',
-        placeholder: 'Ex: R$ 5.000,00',
+        id: 'out_of_scope',
+        question: 'Existe algo que costuma gerar dúvida sobre o que está ou não incluso?',
+        field: 'out_of_scope',
+        placeholder: 'Limites do escopo',
+        feedback: 'Anotado.'
+    },
+    {
+        id: 'revisions',
+        question: 'Haverá revisões ou ajustes durante o projeto?',
+        field: 'revisions',
+        placeholder: 'Política de revisões',
+        feedback: 'Ok.'
+    },
+    // BLOCO 4 — OPERAÇÃO
+    {
+        id: 'decision_maker',
+        question: 'Quem aprova esse projeto do lado do cliente?',
+        field: 'decision_maker',
+        placeholder: 'Tomador de decisão',
+        feedback: 'Entendi.'
+    },
+    {
+        id: 'communication',
+        question: 'Como vocês vão se comunicar durante o projeto?',
+        field: 'communication',
+        placeholder: 'Reuniões semanais, WhatsApp, E-mail...',
+        feedback: 'Certo.'
+    },
+    {
+        id: 'dependencies',
+        question: 'Existe alguma dependência do cliente para que tudo avance bem?',
+        field: 'dependencies',
+        placeholder: 'Materiais, acessos, aprovações...',
         feedback: 'Ótimo.'
     },
+    // BLOCO 5 — COMERCIAL
     {
-        id: 'deadline',
-        question: 'Qual o prazo de entrega?',
-        field: 'deadline',
-        type: 'text',
-        placeholder: 'Ex: 30 dias úteis',
-        feedback: 'Entendido.'
+        id: 'total_value',
+        question: 'Qual é o valor total do projeto?',
+        field: 'total_value',
+        placeholder: 'Ex: R$ 15.000,00',
+        feedback: 'Confirmado.'
     },
     {
-        id: 'payment',
+        id: 'payment_terms',
         question: 'Como será o pagamento?',
-        field: 'payment',
-        type: 'text',
-        placeholder: 'Ex: 50% na entrada, 50% na entrega',
+        field: 'payment_terms',
+        placeholder: 'Ex: 50% entrada + 50% entrega',
+        feedback: 'Ok.'
+    },
+    {
+        id: 'timeline',
+        question: 'Qual o prazo estimado de entrega?',
+        field: 'timeline',
+        placeholder: 'Ex: 45 dias',
         feedback: 'Excelente.'
+    },
+    // BLOCO 6 — FECHAMENTO (KIT)
+    {
+        id: 'closing_opt_in',
+        question: 'Deseja ativar o Kit de Fechamento (Link de Aceite + Pagamento de Entrada)?',
+        field: 'closing_opt_in',
+        placeholder: 'Sim ou Não',
+        feedback: 'Ok.'
+    },
+    {
+        id: 'deposit_amount',
+        question: 'Qual valor deve ser pago na entrada?',
+        field: 'deposit_amount',
+        placeholder: 'Ex: 30% ou R$ 2.000,00',
+        feedback: 'Certo.'
+    },
+    {
+        id: 'pix_key',
+        question: 'Qual a Chave Pix para receber a entrada?',
+        field: 'pix_key',
+        placeholder: 'CPF, CNPJ, Email ou Aleatória',
+        feedback: 'Anotado.'
     }
 ]
 
 export default function ChatInterface() {
-    const [currentStep, setCurrentStep] = useState(-1) // -1 for initial message
+    const [currentStep, setCurrentStep] = useState(-1)
     const [data, setData] = useState<ProposalData>({
-        service: '',
-        client: '',
-        value: '',
-        deadline: '',
-        payment: ''
+        client_name: '',
+        title: '',
+        objective: '',
+        urgency_reason: '',
+        cost_of_inaction: '',
+        previous_attempts: '',
+        scope: '',
+        out_of_scope: '',
+        revisions: '',
+        decision_maker: '',
+        communication: '',
+        dependencies: '',
+        total_value: '',
+        payment_terms: '',
+        timeline: '',
+        closing_opt_in: '',
+        deposit_amount: '',
+        pix_key: ''
     })
-    const [isFinished, setIsFinished] = useState(false)
     const [isTransitioning, setIsTransitioning] = useState(false)
     const [showPreview, setShowPreview] = useState(false)
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
@@ -124,12 +241,33 @@ export default function ChatInterface() {
             }
         }
 
-        // Show feedback message before moving to next step
         setFeedbackMessage(step.feedback)
 
         setTimeout(() => {
             setFeedbackMessage(null)
             if (currentStep < STEPS.length - 1) {
+                // Skip Logic for Closing Kit
+                const nextStepIndex = currentStep + 1
+                const nextStep = STEPS[nextStepIndex]
+
+                if (nextStep.id === 'deposit_amount' || nextStep.id === 'pix_key') {
+                    // Check if user opted out
+                    const optedIn = (data.closing_opt_in || '').toLowerCase().includes('sim')
+                    if (!optedIn) {
+                        // Skip closing details if not opted in
+                        // If next step is deposit_amount, and we skip, we check next.
+                        // Simple approach: Jump to end if opted out? 
+                        // Or jump 2 steps.
+                        // Since these are the last steps, we can just finish.
+                        setIsTransitioning(true)
+                        setTimeout(() => {
+                            setIsTransitioning(false)
+                            setShowPreview(true)
+                        }, 2500)
+                        return
+                    }
+                }
+
                 setCurrentStep(s => s + 1)
             } else {
                 setIsTransitioning(true)
@@ -158,41 +296,41 @@ export default function ChatInterface() {
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 0.8 }}
                     className="space-y-12"
                 >
                     <div className="text-center space-y-4">
                         <span className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-30">Estrutura Finalizada</span>
                         <h2 className="text-5xl font-serif italic tracking-tighter">Sua proposta está pronta.</h2>
+                        <p className="text-muted-foreground font-serif italic">Para liberar o PDF completo, confirme seus dados de pagamento.</p>
                     </div>
 
                     <Card className="p-16 border border-border/40 bg-white relative overflow-hidden">
-                        {/* Fake Document Preview with Overlays */}
+                        {/* Fake Document Preview */}
                         <div className="space-y-12 opacity-40 select-none pointer-events-none">
                             <div className="space-y-4">
-                                <h3 className="text-3xl font-serif italic border-b border-border/40 pb-4">{data.service}</h3>
-                                <p className="text-[10px] uppercase tracking-widest font-bold opacity-40">Proposta para: {data.client}</p>
+                                <h3 className="text-3xl font-serif italic border-b border-border/40 pb-4">{data.title}</h3>
+                                <p className="text-[10px] uppercase tracking-widest font-bold opacity-40">Proposta para: {data.client_name}</p>
                             </div>
 
                             <div className="space-y-8">
                                 <div className="grid grid-cols-2 gap-12">
                                     <div className="space-y-2">
                                         <p className="text-[9px] uppercase tracking-widest font-bold opacity-30">Investimento</p>
-                                        <p className="font-serif text-xl italic">{data.value}</p>
+                                        <p className="font-serif text-xl italic">{data.total_value}</p>
                                     </div>
                                     <div className="space-y-2">
                                         <p className="text-[9px] uppercase tracking-widest font-bold opacity-30">Prazo</p>
-                                        <p className="font-serif text-xl italic">{data.deadline}</p>
+                                        <p className="font-serif text-xl italic">{data.timeline}</p>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <p className="text-[9px] uppercase tracking-widest font-bold opacity-30">Condições de Pagamento</p>
-                                    <p className="font-serif text-xl italic">{data.payment}</p>
+                                    <p className="text-[9px] uppercase tracking-widest font-bold opacity-30">Objetivo</p>
+                                    <p className="font-serif text-lg italic">{data.objective}</p>
                                 </div>
                             </div>
 
                             <Separator className="bg-border/20" />
-
                             <div className="space-y-4">
                                 <div className="h-4 bg-secondary w-3/4"></div>
                                 <div className="h-4 bg-secondary w-full"></div>
@@ -200,15 +338,15 @@ export default function ChatInterface() {
                             </div>
                         </div>
 
-                        {/* Lock Overlay - The "Silent" Paywall */}
+                        {/* Lock Overlay */}
                         <div className="absolute inset-0 bg-background/10 backdrop-blur-[2px] flex items-center justify-center p-8">
                             <div className="max-w-sm w-full bg-white border border-border shadow-2xl p-12 text-center space-y-8">
                                 <div className="w-12 h-12 bg-black flex items-center justify-center mx-auto">
                                     <Lock className="text-white w-5 h-5" />
                                 </div>
                                 <div className="space-y-4">
-                                    <p className="text-xl font-serif italic leading-tight">Para acessar o PDF completo e oficial, confirme seus dados.</p>
-                                    <p className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30">Você tem 1 proposta gratuita. Nenhuma cobrança agora.</p>
+                                    <p className="text-xl font-serif italic leading-tight">Proposta Gerada.</p>
+                                    <p className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30">Libere o download oficial.</p>
                                 </div>
                                 <Button
                                     variant="premium"
@@ -233,6 +371,9 @@ export default function ChatInterface() {
                     animate={{ opacity: 1 }}
                     className="space-y-8"
                 >
+                    <p className="text-3xl font-serif italic text-muted-foreground">
+                        Perfeito. Já tenho tudo o que preciso para organizar sua proposta.
+                    </p>
                     <div className="flex justify-center">
                         <div className="w-1 px-8 space-y-1">
                             <motion.div
@@ -242,9 +383,6 @@ export default function ChatInterface() {
                             ></motion.div>
                         </div>
                     </div>
-                    <p className="text-3xl font-serif italic text-muted-foreground">
-                        Estou organizando sua proposta.
-                    </p>
                 </motion.div>
             </div>
         )
@@ -252,16 +390,20 @@ export default function ChatInterface() {
 
     if (currentStep === -1) {
         return (
-            <div className="max-w-2xl mx-auto px-6 py-32 text-center space-y-16">
+            <div className="max-w-2xl mx-auto px-6 py-12 text-center space-y-8">
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-8"
+                    className="space-y-6"
                 >
-                    <h2 className="text-5xl md:text-6xl font-serif tracking-tighter italic leading-none">Vamos organizar <br /> sua proposta.</h2>
-                    <p className="text-xl text-muted-foreground font-serif italic opacity-60">Responda algumas perguntas rápidas.</p>
+                    <h2 className="text-3xl md:text-4xl font-serif tracking-tighter italic leading-none">
+                        Vou te ajudar a organizar uma proposta clara e profissional.
+                    </h2>
+                    <p className="text-lg text-muted-foreground font-serif italic opacity-60">
+                        Vamos conversar um pouco sobre o projeto.
+                    </p>
                 </motion.div>
-                <Button variant="premium" onClick={handleNext} className="h-20 px-16 text-base tracking-[0.3em]">
+                <Button variant="premium" onClick={handleNext} className="h-16 px-12 text-sm tracking-[0.3em]">
                     Começar
                 </Button>
             </div>
@@ -274,11 +416,11 @@ export default function ChatInterface() {
         <div className="max-w-2xl mx-auto px-6 py-12">
             <div className="space-y-24">
                 {/* Past entries - minimalist editorial list */}
-                <div className="space-y-12">
+                <div className="space-y-8">
                     {STEPS.slice(0, currentStep).map((s) => (
-                        <div key={s.id} className="group space-y-2 opacity-20 hover:opacity-100 transition-opacity duration-500 border-l border-border/30 pl-8">
+                        <div key={s.id} className="group space-y-2 opacity-40 hover:opacity-100 transition-opacity duration-500 border-l border-border/30 pl-6">
                             <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold text-muted-foreground">{s.question}</p>
-                            <p className="font-serif text-2xl italic tracking-tight">{data[s.field]}</p>
+                            <p className="font-serif text-xl italic tracking-tight">{data[s.field]}</p>
                         </div>
                     ))}
                 </div>
@@ -301,8 +443,8 @@ export default function ChatInterface() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                            className="space-y-12"
+                            transition={{ duration: 0.6 }}
+                            className="space-y-8"
                         >
                             <div className="flex items-center gap-8 opacity-10">
                                 <div className="h-px bg-foreground flex-grow"></div>
@@ -312,7 +454,7 @@ export default function ChatInterface() {
                                 <div className="h-px bg-foreground flex-grow"></div>
                             </div>
 
-                            <h2 className="text-5xl md:text-7xl leading-tight text-center font-serif italic tracking-tighter py-4">
+                            <h2 className="text-4xl md:text-6xl leading-tight text-center font-serif italic tracking-tighter py-4 text-balance">
                                 {step.question}
                             </h2>
 
@@ -321,19 +463,19 @@ export default function ChatInterface() {
                                     ref={inputRef}
                                     type="text"
                                     placeholder={step.placeholder}
-                                    className="input-minimal !text-center placeholder:text-center italic text-4xl py-8"
+                                    className="input-minimal !text-center placeholder:text-center italic text-3xl py-6"
                                     value={data[step.field]}
                                     onChange={(e) => setData({ ...data, [step.field]: e.target.value })}
                                     onKeyDown={handleKeyDown}
                                 />
-                                <div className="flex justify-center mt-24">
+                                <div className="flex justify-center mt-16">
                                     <Button
                                         variant="premium"
                                         onClick={handleNext}
                                         disabled={!data[step.field]}
-                                        className="rounded-none w-24 h-24 p-0 flex items-center justify-center transition-all duration-300 disabled:opacity-5 disabled:grayscale"
+                                        className="rounded-none w-20 h-20 p-0 flex items-center justify-center transition-all duration-300 disabled:opacity-5 disabled:grayscale"
                                     >
-                                        <ArrowRight className="w-10 h-10" />
+                                        <ArrowRight className="w-8 h-8" />
                                     </Button>
                                 </div>
                             </div>

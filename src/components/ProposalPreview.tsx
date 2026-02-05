@@ -1,68 +1,116 @@
-'use client'
+import { ProposalContent } from '@/lib/proposal-engine'
 
-import { motion } from 'framer-motion'
-
-type ProposalProps = {
-    data: {
-        service: string
-        client: string
-        value: string
-        deadline: string
-        payment: string
-    }
-}
-
-export default function ProposalPreview({ data }: ProposalProps) {
+export default function ProposalPreview({ content, clientName }: { content: ProposalContent; clientName: string }) {
     return (
-        <div className="bg-white border border-[#e5e5e5] shadow-2xl max-w-2xl mx-auto p-12 md:p-24 font-serif relative overflow-hidden">
-            {/* Blurred overlay for paywall effect if needed */}
+        <div className="bg-white border border-[#e5e5e5] shadow-2xl max-w-3xl mx-auto p-12 md:p-24 font-serif relative overflow-hidden text-[#333]">
+            {/* Header */}
+            <div className="space-y-12 mb-16 border-b border-black pb-12">
+                <div className="flex justify-between items-start">
+                    <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Proposta Comercial</p>
+                    <div className="text-right">
+                        <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">Para</p>
+                        <p className="text-lg italic">{clientName}</p>
+                    </div>
+                </div>
+                <h1 className="text-4xl md:text-5xl leading-tight font-serif tracking-tight pr-12">
+                    Plano de Trabalho
+                </h1>
+                <p className="text-lg leading-relaxed text-muted-foreground italic">
+                    {content.introduction}
+                </p>
+            </div>
 
+            {/* Sections */}
             <div className="space-y-16">
-                <header className="border-b border-black pb-8">
-                    <p className="font-sans text-[10px] uppercase tracking-[0.2em] mb-4">Proposta Comercial</p>
-                    <h1 className="text-4xl md:text-5xl leading-tight">{data.service}</h1>
-                </header>
 
-                <section className="grid grid-cols-2 gap-12 text-sm">
-                    <div>
-                        <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-muted mb-2">Para</p>
-                        <p className="text-xl">{data.client}</p>
-                    </div>
-                    <div>
-                        <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-muted mb-2">Data</p>
-                        <p className="text-xl">{new Date().toLocaleDateString('pt-BR')}</p>
-                    </div>
-                </section>
-
-                <section className="space-y-6">
-                    <h2 className="text-2xl border-b border-[#f0f0f0] pb-2">Escopo do Serviço</h2>
-                    <p className="text-muted leading-relaxed italic">
-                        Esta proposta contempla a execução de {data.service} para {data.client}, seguindo os mais altos padrões de qualidade e entrega.
+                {/* 1. Contexto */}
+                <section className="space-y-4">
+                    <h3 className="font-sans text-xs uppercase tracking-[0.1em] font-bold border-b border-border pb-2 mb-4">1. Contexto e Objetivo</h3>
+                    <p className="text-lg leading-relaxed text-muted-foreground">
+                        {content.context}
                     </p>
                 </section>
 
-                <section className="bg-[#fcfcfc] p-8 border-l-4 border-black">
-                    <div className="flex justify-between items-end">
-                        <div>
-                            <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-muted mb-2">Investimento Total</p>
-                            <p className="text-3xl">{data.value}</p>
-                        </div>
-                        <div className="text-right">
-                            <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-muted mb-2">Prazo</p>
-                            <p className="text-lg">{data.deadline}</p>
-                        </div>
+                {/* 2. Escopo */}
+                <section className="space-y-4">
+                    <h3 className="font-sans text-xs uppercase tracking-[0.1em] font-bold border-b border-border pb-2 mb-4">2. Escopo do Projeto</h3>
+                    <ul className="space-y-4">
+                        {content.scope.map((item, i) => (
+                            <li key={i} className="flex gap-4 text-lg text-muted-foreground leading-relaxed">
+                                <span className="block mt-2 w-1.5 h-1.5 rounded-full bg-black/20 flex-shrink-0" />
+                                {item}
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+
+                {/* 3. Não Incluso (Conditional) */}
+                {content.outOfScope && (
+                    <section className="space-y-4">
+                        <h3 className="font-sans text-xs uppercase tracking-[0.1em] font-bold border-b border-border pb-2 mb-4">3. O que não está incluso</h3>
+                        <p className="text-lg leading-relaxed text-muted-foreground">
+                            {content.outOfScope}
+                        </p>
+                    </section>
+                )}
+
+                {/* 4. Operação */}
+                <section className="space-y-4">
+                    <h3 className="font-sans text-xs uppercase tracking-[0.1em] font-bold border-b border-border pb-2 mb-4">
+                        {content.outOfScope ? '4' : '3'}. Operação e Comunicação
+                    </h3>
+                    <p className="text-lg leading-relaxed text-muted-foreground">
+                        {content.operation}
+                    </p>
+                </section>
+
+                {/* 5. Investimento */}
+                <section className="space-y-4">
+                    <h3 className="font-sans text-xs uppercase tracking-[0.1em] font-bold border-b border-border pb-2 mb-4">
+                        {content.outOfScope ? '5' : '4'}. Investimento
+                    </h3>
+                    <div className="bg-[#f9f9f9] p-8 border-l-4 border-black">
+                        <p className="text-xl leading-relaxed font-medium">
+                            {content.investment}
+                        </p>
                     </div>
                 </section>
 
+                {/* 6. Condições */}
                 <section className="space-y-4">
-                    <h2 className="text-xl">Condições de Pagamento</h2>
-                    <p className="text-muted">{data.payment}</p>
+                    <h3 className="font-sans text-xs uppercase tracking-[0.1em] font-bold border-b border-border pb-2 mb-4">
+                        {content.outOfScope ? '6' : '5'}. Condições Comerciais
+                    </h3>
+                    <p className="text-lg leading-relaxed text-muted-foreground">
+                        {content.commercialConditions}
+                    </p>
                 </section>
 
-                <footer className="pt-16 text-[10px] font-sans uppercase tracking-widest text-center opacity-30">
-                    Gerado via ProposeKit — Licença Premium
-                </footer>
+                {/* 7. Prazo */}
+                <section className="space-y-4">
+                    <h3 className="font-sans text-xs uppercase tracking-[0.1em] font-bold border-b border-border pb-2 mb-4">
+                        {content.outOfScope ? '7' : '6'}. Prazo Estimado
+                    </h3>
+                    <p className="text-lg leading-relaxed text-muted-foreground">
+                        {content.timeline}
+                    </p>
+                </section>
+
+                {/* 8. Próximos Passos */}
+                <section className="space-y-4">
+                    <h3 className="font-sans text-xs uppercase tracking-[0.1em] font-bold border-b border-border pb-2 mb-4">
+                        {content.outOfScope ? '8' : '7'}. Próximos Passos
+                    </h3>
+                    <p className="text-lg leading-relaxed text-muted-foreground">
+                        {content.nextSteps}
+                    </p>
+                </section>
+
             </div>
+
+            <footer className="pt-24 mt-12 border-t border-border/40 text-[10px] font-sans uppercase tracking-widest text-center opacity-30">
+                Gerado via ProposeKit — Licença Premium
+            </footer>
         </div>
     )
 }

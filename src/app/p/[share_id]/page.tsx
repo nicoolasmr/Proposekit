@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import ProposalPreview from '@/components/ProposalPreview'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { generateProposalText } from '@/lib/proposal-engine'
 
 export default async function PublicProposalPage({
     params
@@ -22,8 +23,13 @@ export default async function PublicProposalPage({
         notFound()
     }
 
-    // 2. Security Check: Only 'released' proposals are visible publicly in high authority link
-    if (proposal.status !== 'released') {
+    // 2. Security Check & Visibility
+    const isReleased = proposal.status === 'released'
+    // Closing Mode: visible if sent, viewed, approved, etc. (anything but draft?)
+    const isClosingMode = proposal.mode === 'closing' // Or feature flag check if strictly enforced
+    const isClosingVisible = isClosingMode && proposal.status_v2 && proposal.status_v2 !== 'draft'
+
+    if (!isReleased && !isClosingVisible) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background p-8">
                 <div className="max-w-md text-center space-y-6">
@@ -46,13 +52,11 @@ export default async function PublicProposalPage({
         metadata: { source: 'public_link' }
     })
 
-    const previewData = {
-        service: proposal.service_description,
-        client: proposal.client_name,
-        value: `R$ ${proposal.project_value?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}`,
-        deadline: proposal.deadline,
-        payment: proposal.payment_conditions
-    }
+    // 4. Generate Content via Engine
+    // Casting as any until DB migration confirms types
+    const content = generateProposalText(proposal as any)
+
+    const statusV2 = proposal.status_v2
 
     return (
         <div className="min-h-screen bg-[#FDFDFD] py-20 px-6 selection:bg-black selection:text-white">
@@ -61,15 +65,37 @@ export default async function PublicProposalPage({
                     <div className="font-serif text-xl tracking-tighter opacity-20">
                         PROPOSE<span className="font-sans font-bold italic">KIT</span>
                     </div>
-                    <a
-                        href={`/api/proposals/${proposal.id}/pdf`}
-                        className="premium-button text-[10px] tracking-[0.2em]"
-                    >
-                        BAIXAR PDF (4K)
-                    </a>
+                    <div className="flex gap-4 items-center">
+                        {isClosingMode && (statusV2 === 'sent' || statusV2 === 'viewed') && (
+                            <Link href={`/p/${share_id}/approve`}>
+                                <button className="bg-green-700 text-white px-6 py-3 text-[10px] tracking-[0.2em] font-bold uppercase hover:bg-green-800 transition-colors">
+                                    Aprovar Proposta
+                                </button>
+                            </Link>
+                        )}
+                        {isClosingMode && statusV2 === 'awaiting_deposit' && (
+                            <Link href={`/p/${share_id}/deposit`}>
+                                <button className="bg-blue-700 text-white px-6 py-3 text-[10px] tracking-[0.2em] font-bold uppercase hover:bg-blue-800 transition-colors">
+                                    Realizar Pagamento
+                                </button>
+                            </Link>
+                        )}
+                        {isClosingMode && (statusV2 === 'approved' || statusV2 === 'paid' || statusV2 === 'kickoff') && (
+                            <div className="text-green-800 bg-green-50 px-4 py-2 text-[10px] tracking-[0.2em] font-bold uppercase border border-green-200">
+                                APROVADA
+                            </div>
+                        )}
+
+                        <a
+                            href={`/api/proposals/${proposal.id}/pdf`}
+                            className="premium-button text-[10px] tracking-[0.2em]"
+                        >
+                            BAIXAR PDF (4K)
+                        </a>
+                    </div>
                 </header>
 
-                <ProposalPreview data={previewData} />
+                <ProposalPreview content={content} clientName={proposal.client_name} />
 
                 <footer className="text-center pt-32 pb-20">
                     <p className="text-muted-foreground text-sm font-serif italic mb-8 opacity-50">
