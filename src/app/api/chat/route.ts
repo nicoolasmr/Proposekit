@@ -57,7 +57,7 @@ export async function POST(req: Request) {
             update_proposal: tool({
                 description: 'Update the proposal draft with new information extracted from the conversation.',
                 parameters: proposalSchema,
-                execute: async (newData) => {
+                execute: async (newData: any) => {
                     // In a real app we might save to DB here, but for now we just return it
                     // so the client can update its local state.
                     return { updated: true, fields: Object.keys(newData) };

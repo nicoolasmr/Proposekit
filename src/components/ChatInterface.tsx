@@ -1,15 +1,12 @@
-'use client'
-
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Check, Lock } from 'lucide-react'
+import { ArrowUp, Sparkles, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { createChatSession, saveChatMessage } from '@/app/actions/chat'
-import { createClient } from '@/lib/supabase/client'
+import { useChat } from 'ai/react'
+import { createProposal } from '@/app/actions/proposals'
 
-type ProposalData = {
+// Define ProposalData locally if not exported from engine, or update engine export
+export type ProposalData = {
     client_name: string
     title: string
     objective: string
@@ -22,523 +19,180 @@ type ProposalData = {
     decision_maker: string
     communication: string
     dependencies: string
-    total_value: string
+    total_value: number | string // Allow string for interim state
     payment_terms: string
     timeline: string
-    // Closing Kit
     closing_opt_in?: string
     deposit_amount?: string
     pix_key?: string
-    // Upsells
     upsells_raw?: string
 }
 
-type Step = {
-    id: string
-    question: string
-    field: keyof ProposalData
-    placeholder: string
-    feedback: string
-}
-
-const STEPS: Step[] = [
-    // BLOCO 1 — CONTEXTO
-    {
-        id: 'client_name',
-        question: 'Para quem é essa proposta?',
-        field: 'client_name',
-        placeholder: 'Nome do cliente ou empresa',
-        feedback: 'Certo.'
-    },
-    {
-        id: 'title',
-        question: 'Como você descreveria esse projeto ou serviço?',
-        field: 'title',
-        placeholder: 'Ex: Consultoria de Marketing Estratégico',
-        feedback: 'Entendi.'
-    },
-    {
-        id: 'objective',
-        question: 'O que esse cliente espera resolver ou conquistar com esse projeto?',
-        field: 'objective',
-        placeholder: 'Qual o principal objetivo?',
-        feedback: 'Ótimo.'
-    },
-    // BLOCO 2 — VALOR
-    {
-        id: 'urgency_reason',
-        question: 'Por que esse projeto é importante agora?',
-        field: 'urgency_reason',
-        placeholder: 'Existe algum gatilho de urgência?',
-        feedback: 'Compreendo.'
-    },
-    {
-        id: 'cost_of_inaction',
-        question: 'O que acontece se isso não for feito neste momento?',
-        field: 'cost_of_inaction',
-        placeholder: 'Riscos ou perdas envolvidas',
-        feedback: 'Entendi.'
-    },
-    {
-        id: 'previous_attempts',
-        question: 'Eles já tentaram algo parecido antes?',
-        field: 'previous_attempts',
-        placeholder: 'Histórico de tentativas',
-        feedback: 'Certo.'
-    },
-    // BLOCO 3 — ESCOPO
-    {
-        id: 'scope',
-        question: 'O que exatamente você vai entregar nesse projeto?',
-        field: 'scope',
-        placeholder: 'Principais entregáveis',
-        feedback: 'Perfeito.'
-    },
-    {
-        id: 'out_of_scope',
-        question: 'Existe algo que costuma gerar dúvida sobre o que está ou não incluso?',
-        field: 'out_of_scope',
-        placeholder: 'Limites do escopo',
-        feedback: 'Anotado.'
-    },
-    {
-        id: 'revisions',
-        question: 'Haverá revisões ou ajustes durante o projeto?',
-        field: 'revisions',
-        placeholder: 'Política de revisões',
-        feedback: 'Ok.'
-    },
-    // BLOCO 4 — OPERAÇÃO
-    {
-        id: 'decision_maker',
-        question: 'Quem aprova esse projeto do lado do cliente?',
-        field: 'decision_maker',
-        placeholder: 'Tomador de decisão',
-        feedback: 'Entendi.'
-    },
-    {
-        id: 'communication',
-        question: 'Como vocês vão se comunicar durante o projeto?',
-        field: 'communication',
-        placeholder: 'Reuniões semanais, WhatsApp, E-mail...',
-        feedback: 'Certo.'
-    },
-    {
-        id: 'dependencies',
-        question: 'Existe alguma dependência do cliente para que tudo avance bem?',
-        field: 'dependencies',
-        placeholder: 'Materiais, acessos, aprovações...',
-        feedback: 'Ótimo.'
-    },
-    // BLOCO 5 — COMERCIAL
-    {
-        id: 'total_value',
-        question: 'Qual é o valor total do projeto?',
-        field: 'total_value',
-        placeholder: 'Ex: R$ 15.000,00',
-        feedback: 'Confirmado.'
-    },
-    {
-        id: 'payment_terms',
-        question: 'Como será o pagamento?',
-        field: 'payment_terms',
-        placeholder: 'Ex: 50% entrada + 50% entrega',
-        feedback: 'Ok.'
-    },
-    {
-        id: 'timeline',
-        question: 'Qual o prazo estimado de entrega?',
-        field: 'timeline',
-        placeholder: 'Ex: 45 dias',
-        feedback: 'Excelente.'
-    },
-    // BLOCO 6 — FECHAMENTO (KIT)
-    {
-        id: 'closing_opt_in',
-        question: 'Deseja ativar o Kit de Fechamento (Link de Aceite + Pagamento de Entrada)?',
-        field: 'closing_opt_in',
-        placeholder: 'Sim ou Não',
-        feedback: 'Ok.'
-    },
-    {
-        id: 'deposit_amount',
-        question: 'Qual valor deve ser pago na entrada?',
-        field: 'deposit_amount',
-        placeholder: 'Ex: 30% ou R$ 2.000,00',
-        feedback: 'Certo.'
-    },
-    {
-        id: 'pix_key',
-        question: 'Qual a Chave Pix para receber a entrada?',
-        field: 'pix_key',
-        placeholder: 'CPF, CNPJ, Email ou Aleatória',
-        feedback: 'Anotado.'
-    },
-    {
-        id: 'upsell_options',
-        question: 'Gostaria de oferecer itens adicionais (Upsells)?',
-        field: 'upsells_raw',
-        placeholder: 'Ex: Consultoria Extra - 1000',
-        feedback: 'Perfeito. Isso aumenta seu ticket médio.'
-    }
-]
-
-export default function ChatInterface() {
-    const [currentStep, setCurrentStep] = useState(-1)
-    const [data, setData] = useState<ProposalData>({
-        client_name: '',
-        title: '',
-        objective: '',
-        urgency_reason: '',
-        cost_of_inaction: '',
-        previous_attempts: '',
-        scope: '',
-        out_of_scope: '',
-        revisions: '',
-        decision_maker: '',
-        communication: '',
-        dependencies: '',
-        total_value: '',
-        payment_terms: '',
-        timeline: '',
-        closing_opt_in: '',
-        deposit_amount: '',
-        pix_key: '',
-        upsells_raw: ''
-    })
-    const [isTransitioning, setIsTransitioning] = useState(false)
-    const [showPreview, setShowPreview] = useState(false)
-    const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
-    const [sessionId, setSessionId] = useState<string | null>(null)
-    const [user, setUser] = useState<any>(null)
-    const inputRef = useRef<HTMLInputElement>(null)
-    const supabase = createClient()
-
-    useEffect(() => {
-        supabase.auth.getUser().then(({ data: { user } }) => {
-            setUser(user)
-        })
-    }, [])
-
-    const isProcessing = useRef(false)
-
-    useEffect(() => {
-        if (currentStep >= 0 && !feedbackMessage) {
-            inputRef.current?.focus()
-        }
-    }, [currentStep, feedbackMessage])
-
-    const handleNext = async () => {
-        // Strict Concurrency Lock
-        if (isProcessing.current) return
-        isProcessing.current = true
-
-        // Just in case, unlock on error or early return
-        const unlock = () => {
-            isProcessing.current = false
-        }
-
-        if (currentStep === -1) {
-            setCurrentStep(0)
-            unlock()
-            return
-        }
-
-        const step = STEPS[currentStep]
-        const content = data[step.field as keyof ProposalData] || ''
-
-        if (step.id !== 'upsell_options' && !content.toString().trim()) {
-            unlock()
-            return
-        }
-
-        // Persistence Logic
-        if (user) {
-            try {
-                let sid = sessionId
-                if (!sid) {
-                    sid = await createChatSession()
-                    setSessionId(sid)
-                }
-                if (sid) {
-                    await saveChatMessage(sid, 'user', content)
-                }
-            } catch (e) {
-                console.error('Error saving chat:', e)
-            }
-        }
-
-        setFeedbackMessage(step.feedback)
-
-        // Safety timeout to ensure unlock happens even if animation has issues,
-        // but primarily we unlock inside the main timeout.
-        setTimeout(() => {
-            setFeedbackMessage(null)
-            if (currentStep < STEPS.length - 1) {
-                const nextStepIndex = currentStep + 1
-                const nextStep = STEPS[nextStepIndex]
-
-                if (nextStep.id === 'deposit_amount' || nextStep.id === 'pix_key') {
-                    const optedIn = (data.closing_opt_in || '').toLowerCase().includes('sim')
-                    if (!optedIn) {
-                        let nextIdx = nextStepIndex
-                        // Skip loop logic...
-                        while (nextIdx < STEPS.length && (STEPS[nextIdx].id === 'deposit_amount' || STEPS[nextIdx].id === 'pix_key') && !optedIn) {
-                            nextIdx++
-                        }
-
-                        if (nextIdx < STEPS.length) {
-                            setCurrentStep(nextIdx)
-                            unlock()
-                            return
-                        } else {
-                            setIsTransitioning(true)
-                            setTimeout(() => {
-                                setIsTransitioning(false)
-                                setShowPreview(true)
-                                unlock()
-                            }, 2500)
-                            return
-                        }
-                    }
-                }
-
-                setCurrentStep(s => s + 1)
-                unlock()
-            } else {
-                setIsTransitioning(true)
-                setTimeout(() => {
-                    setIsTransitioning(false)
-                    setShowPreview(true)
-                    unlock()
-                }, 2500)
-            }
-        }, 800)
-    }
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && currentStep >= 0 && data[STEPS[currentStep].field] && !feedbackMessage) {
-            handleNext()
-        }
-    }
-
-    // Partial Preview State
-    if (showPreview) {
-        if (typeof window !== 'undefined') {
-            // Parse Upsells
-            const upsellsRaw = data.upsells_raw || ''
-            const parsedUpsells = upsellsRaw.split(/[\n,]+/).map(item => {
-                // Try format "Title - Value"
-                const parts = item.split(/[-–—]+/) // hyphen variants
-                if (parts.length >= 2) {
-                    const valueStr = parts.pop()?.trim() || '0'
-                    const title = parts.join('-').trim()
-                    const value = parseFloat(valueStr.replace(/[^0-9,.]/g, '').replace(',', '.'))
-                    if (title && !isNaN(value)) {
-                        return { title, value }
-                    }
-                }
-                return null
-            }).filter(Boolean)
-
-            localStorage.setItem('pending_proposal', JSON.stringify({
-                ...data,
-                upsell_options: parsedUpsells
-            }))
-        }
-
-        return (
-            <div className="max-w-4xl mx-auto py-24 px-6 space-y-16">
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    className="space-y-12"
-                >
-                    <div className="text-center space-y-4">
-                        <span className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-30">Estrutura Finalizada</span>
-                        <h2 className="text-5xl font-serif italic tracking-tighter">Sua proposta está pronta.</h2>
-                        <p className="text-muted-foreground font-serif italic">Para liberar o PDF completo, confirme seus dados de pagamento.</p>
-                    </div>
-
-                    <Card className="p-16 border border-border/40 bg-white relative overflow-hidden">
-                        {/* Fake Document Preview */}
-                        <div className="space-y-12 opacity-40 select-none pointer-events-none">
-                            <div className="space-y-4">
-                                <h3 className="text-3xl font-serif italic border-b border-border/40 pb-4">{data.title}</h3>
-                                <p className="text-[10px] uppercase tracking-widest font-bold opacity-40">Proposta para: {data.client_name}</p>
-                            </div>
-
-                            <div className="space-y-8">
-                                <div className="grid grid-cols-2 gap-12">
-                                    <div className="space-y-2">
-                                        <p className="text-[9px] uppercase tracking-widest font-bold opacity-30">Investimento</p>
-                                        <p className="font-serif text-xl italic">{data.total_value}</p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <p className="text-[9px] uppercase tracking-widest font-bold opacity-30">Prazo</p>
-                                        <p className="font-serif text-xl italic">{data.timeline}</p>
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <p className="text-[9px] uppercase tracking-widest font-bold opacity-30">Objetivo</p>
-                                    <p className="font-serif text-lg italic">{data.objective}</p>
-                                </div>
-                            </div>
-
-                            <Separator className="bg-border/20" />
-                            <div className="space-y-4">
-                                <div className="h-4 bg-secondary w-3/4"></div>
-                                <div className="h-4 bg-secondary w-full"></div>
-                                <div className="h-4 bg-secondary w-1/2"></div>
-                            </div>
-                        </div>
-
-                        {/* Lock Overlay */}
-                        <div className="absolute inset-0 bg-background/10 backdrop-blur-[2px] flex items-center justify-center p-8">
-                            <div className="max-w-sm w-full bg-white border border-border shadow-2xl p-12 text-center space-y-8">
-                                <div className="w-12 h-12 bg-black flex items-center justify-center mx-auto">
-                                    <Lock className="text-white w-5 h-5" />
-                                </div>
-                                <div className="space-y-4">
-                                    <p className="text-xl font-serif italic leading-tight">Proposta Gerada.</p>
-                                    <p className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30">Libere o download oficial.</p>
-                                </div>
-                                <Button
-                                    variant="premium"
-                                    className="w-full h-16"
-                                    onClick={() => window.location.href = '/checkout'}
-                                >
-                                    Liberar Proposta
-                                </Button>
-                            </div>
-                        </div>
-                    </Card>
-                </motion.div>
-            </div>
-        )
-    }
-
-    if (isTransitioning) {
-        return (
-            <div className="max-w-2xl mx-auto px-6 py-56 text-center">
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="space-y-8"
-                >
-                    <p className="text-3xl font-serif italic text-muted-foreground">
-                        Perfeito. Já tenho tudo o que preciso para organizar sua proposta.
-                    </p>
-                    <div className="flex justify-center">
-                        <div className="w-1 px-8 space-y-1">
-                            <motion.div
-                                animate={{ scaleY: [1, 2, 1] }}
-                                transition={{ repeat: Infinity, duration: 1.5 }}
-                                className="h-4 bg-foreground/20 w-px mx-auto"
-                            ></motion.div>
-                        </div>
-                    </div>
-                </motion.div>
-            </div>
-        )
-    }
-
-    if (currentStep === -1) {
-        return (
-            <div className="max-w-2xl mx-auto px-6 py-12 text-center space-y-8">
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="space-y-6"
-                >
-                    <h2 className="text-3xl md:text-4xl font-serif tracking-tighter italic leading-none">
-                        Vou te ajudar a organizar uma proposta clara e profissional.
-                    </h2>
-                    <p className="text-lg text-muted-foreground font-serif italic opacity-60">
-                        Vamos conversar um pouco sobre o projeto.
-                    </p>
-                </motion.div>
-                <Button variant="premium" onClick={handleNext} className="h-16 px-12 text-sm tracking-[0.3em]">
-                    Começar
-                </Button>
-            </div>
-        )
-    }
-
-    const step = STEPS[currentStep]
-
+// --- Preview Component (Right Side) ---
+const LivePreview = ({ data }: { data: Partial<ProposalData> }) => {
     return (
-        <div className="max-w-2xl mx-auto px-6 py-12">
-            <div className="space-y-24">
-                {/* Past entries - minimalist editorial list */}
-                <div className="space-y-8">
-                    {STEPS.slice(0, currentStep).map((s) => (
-                        <div key={s.id} className="group space-y-2 opacity-40 hover:opacity-100 transition-opacity duration-500 border-l border-border/30 pl-6">
-                            <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold text-muted-foreground">{s.question}</p>
-                            <p className="font-serif text-xl italic tracking-tight">{data[s.field]}</p>
-                        </div>
-                    ))}
+        <div className="h-full bg-white border-l border-border/50 p-12 overflow-y-auto font-serif custom-scrollbar">
+            <div className="space-y-12 opacity-80 hover:opacity-100 transition-opacity duration-500">
+                <div className="space-y-4">
+                    <p className="text-[10px] uppercase tracking-[0.4em] font-bold opacity-30">Rascunho em Tempo Real</p>
+                    <h2 className="text-4xl italic tracking-tighter text-balance">
+                        {data.title || <span className="opacity-20">Título do Projeto...</span>}
+                    </h2>
+                    <p className="text-sm uppercase tracking-widest opacity-40">
+                        Para: {data.client_name || '...'}
+                    </p>
                 </div>
 
-                {/* Feedback or Question */}
-                <AnimatePresence mode="wait">
-                    {feedbackMessage ? (
-                        <motion.div
-                            key="feedback"
-                            initial={{ opacity: 0, scale: 0.98 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.98 }}
-                            className="py-12 text-center"
-                        >
-                            <p className="text-3xl font-serif italic opacity-40">{feedbackMessage}</p>
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key={step.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.6 }}
-                            className="space-y-8"
-                        >
-                            <div className="flex items-center gap-8 opacity-10">
-                                <div className="h-px bg-foreground flex-grow"></div>
-                                <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold">
-                                    {currentStep + 1} / {STEPS.length}
-                                </p>
-                                <div className="h-px bg-foreground flex-grow"></div>
-                            </div>
+                <div className="space-y-8">
+                    <div className="grid grid-cols-2 gap-8">
+                        <div>
+                            <p className="text-[9px] uppercase tracking-widest font-bold opacity-30 mb-2">Investimento</p>
+                            <p className="text-xl italic">{data.total_value ? `R$ ${data.total_value}` : '...'}</p>
+                        </div>
+                        <div>
+                            <p className="text-[9px] uppercase tracking-widest font-bold opacity-30 mb-2">Prazo</p>
+                            <p className="text-xl italic">{data.timeline || '...'}</p>
+                        </div>
+                    </div>
 
-                            <h2 className="text-4xl md:text-6xl leading-tight text-center font-serif italic tracking-tighter py-4 text-balance">
-                                {step.question}
-                            </h2>
+                    <div className="space-y-2">
+                        <p className="text-[9px] uppercase tracking-widest font-bold opacity-30">Objetivo Central</p>
+                        <p className="text-lg italic leading-relaxed text-muted-foreground">
+                            {data.objective || '...'}
+                        </p>
+                    </div>
 
-                            <div className="relative pt-8 max-w-lg mx-auto">
-                                <input
-                                    ref={inputRef}
-                                    type="text"
-                                    placeholder={step.placeholder}
-                                    className="input-minimal !text-center placeholder:text-center italic text-3xl py-6"
-                                    value={data[step.field]}
-                                    onChange={(e) => setData({ ...data, [step.field]: e.target.value })}
-                                    onKeyDown={handleKeyDown}
-                                />
-                                <div className="flex justify-center mt-16">
-                                    <Button
-                                        variant="premium"
-                                        onClick={handleNext}
-                                        disabled={!data[step.field]}
-                                        className="rounded-none w-20 h-20 p-0 flex items-center justify-center transition-all duration-300 disabled:opacity-5 disabled:grayscale"
-                                    >
-                                        <ArrowRight className="w-8 h-8" />
-                                    </Button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                    <div className="space-y-2">
+                        <p className="text-[9px] uppercase tracking-widest font-bold opacity-30">Dor & Urgência</p>
+                        <p className="text-base italic leading-relaxed text-muted-foreground opacity-70">
+                            {data.cost_of_inaction || '...'}
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <p className="text-[9px] uppercase tracking-widest font-bold opacity-30">Escopo</p>
+                        <p className="text-base italic leading-relaxed text-muted-foreground">
+                            {data.scope || '...'}
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     )
 }
+
+// --- Main Chat Component ---
+export default function ChatInterface() {
+    const [proposalData, setProposalData] = useState<Partial<ProposalData>>({})
+    const [isFinished, setIsFinished] = useState(false)
+    const [isSaving, setIsSaving] = useState(false)
+
+    // Vercel AI SDK Hook
+    const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+        api: '/api/chat',
+        initialMessages: [
+            {
+                id: 'welcome',
+                role: 'assistant',
+                content: 'Olá. Sou seu consultor de vendas sênior. Vamos montar uma proposta irrecusável. Comece me dizendo: Quem é o cliente e qual o grande problema que você vai resolver para ele?'
+            }
+        ],
+        onToolCall: ({ toolCall }) => {
+            if (toolCall.toolName === 'update_proposal') {
+                const newData = toolCall.args as Partial<ProposalData>
+                console.log('AI Extraction:', newData)
+                setProposalData(prev => ({ ...prev, ...newData }))
+                // Could show a toast here: "Updated Scope"
+            }
+        }
+    })
+
+    const handleCreateProposal = async () => {
+        setIsSaving(true)
+        try {
+            await createProposal(proposalData)
+            // Redirect happens in action, or we push router here. 
+            // The action uses revalidatePath but we might need explicit redirect
+            window.location.href = '/dashboard' // Simple redirect for now
+        } catch (e) {
+            console.error(e)
+            setIsSaving(false)
+        }
+    }
+
+    return (
+        <div className="flex h-screen overflow-hidden bg-[#FDFDFD]">
+            {/* Left: Chat Interaction */}
+            <div className="w-1/2 flex flex-col relative border-r border-border/40">
+                <div className="flex-1 overflow-y-auto px-12 py-12 custom-scrollbar">
+                    <div className="space-y-8 max-w-2xl mx-auto">
+                        {messages.map(m => (
+                            <motion.div
+                                key={m.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                            >
+                                <div className={`
+                                    max-w-[85%] p-6 text-lg font-serif leading-relaxed
+                                    ${m.role === 'user'
+                                        ? 'bg-black text-white rounded-t-3xl rounded-bl-3xl'
+                                        : 'bg-secondary/30 text-foreground rounded-t-3xl rounded-br-3xl'}
+                                `}>
+                                    {m.content}
+                                </div>
+                            </motion.div>
+                        ))}
+                        {isLoading && (
+                            <div className="flex justify-start">
+                                <div className="bg-secondary/30 p-6 rounded-t-3xl rounded-br-3xl flex gap-2 items-center">
+                                    <span className="w-2 h-2 bg-black/40 rounded-full animate-bounce"></span>
+                                    <span className="w-2 h-2 bg-black/40 rounded-full animate-bounce delay-100"></span>
+                                    <span className="w-2 h-2 bg-black/40 rounded-full animate-bounce delay-200"></span>
+                                </div>
+                            </div>
+                        )}
+                        <div id="anchor" className="h-4"></div>
+                    </div>
+                </div>
+
+                {/* Input Area */}
+                <div className="p-8 pb-12 bg-gradient-to-t from-background via-background to-transparent">
+                    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto relative">
+                        <input
+                            value={input}
+                            onChange={handleInputChange}
+                            placeholder="Descreva o projeto..."
+                            className="w-full bg-white border border-border/50 shadow-sm p-6 pr-20 text-lg font-serif placeholder:font-sans placeholder:text-sm placeholder:tracking-widest rounded-xl focus:outline-none focus:ring-1 focus:ring-black/20 transition-all"
+                        />
+                        <Button
+                            type="submit"
+                            disabled={isLoading || !input}
+                            className="absolute right-3 top-3 w-12 h-12 rounded-lg bg-black text-white hover:bg-black/90 flex items-center justify-center disabled:opacity-50"
+                        >
+                            <ArrowUp className="w-5 h-5" />
+                        </Button>
+                    </form>
+                </div>
+            </div>
+
+            {/* Right: Live Preview */}
+            <div className="w-1/2 relative bg-[#FAFAFA]">
+                <LivePreview data={proposalData} />
+
+                {/* Generate Button Overlay */}
+                <div className="absolute bottom-12 right-12">
+                    <Button
+                        onClick={handleCreateProposal}
+                        disabled={isSaving}
+                        className="h-16 px-10 text-sm tracking-[0.2em] uppercase font-bold shadow-2xl bg-black hover:bg-black/90 text-white rounded-none flex items-center gap-4 group"
+                    >
+                        {isSaving ? 'Gerando...' : 'Finalizar Proposta'}
+                        <Sparkles className="w-4 h-4 text-yellow-400 group-hover:rotate-12 transition-transform" />
+                    </Button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
