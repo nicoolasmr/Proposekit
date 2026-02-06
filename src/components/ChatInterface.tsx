@@ -107,7 +107,7 @@ export default function ChatInterface() {
     // Vercel AI SDK Hook
     // @ts-ignore - useChat types might be mismatching with @ai-sdk/react, forcing any for build
     const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-        api: '/api/chat',
+        // api: '/api/chat', // Defaults to /api/chat
         initialMessages: [
             {
                 id: 'welcome',
@@ -123,7 +123,7 @@ export default function ChatInterface() {
                 // Could show a toast here: "Updated Scope"
             }
         }
-    }) as any
+    } as any) as any
 
     const handleCreateProposal = async () => {
         setIsSaving(true)
