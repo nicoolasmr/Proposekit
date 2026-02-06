@@ -36,11 +36,17 @@ export async function createProposal(formData: any) {
             decision_maker: formData.decision_maker,
             communication: formData.communication,
             dependencies: formData.dependencies,
-            project_value: typeof formData.value === 'string'
-                ? parseFloat(formData.value.replace(/[^0-9,]/g, '').replace(',', '.')) || 0
-                : formData.value,
-            payment_conditions: formData.payment_terms || formData.payment, // Map payment_terms to payment_conditions
-            deadline: formData.timeline || formData.deadline, // Map timeline to deadline if needed, or separate columns
+            // Parse project value (handle number or string)
+            project_value: formData.project_value
+                ? (typeof formData.project_value === 'string'
+                    ? parseFloat(formData.project_value.replace(/[^0-9,.]/g, '').replace(',', '.'))
+                    : formData.project_value)
+                : (typeof formData.value === 'string'
+                    ? parseFloat(formData.value.replace(/[^0-9,.]/g, '').replace(',', '.'))
+                    : formData.value) || 0,
+
+            payment_conditions: formData.payment_conditions || formData.payment_terms,
+            deadline: formData.deadline || formData.timeline,
 
             // Closing Kit Fields
             mode: formData.mode || 'proposal',

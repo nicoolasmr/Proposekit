@@ -18,6 +18,11 @@ export const proposalSchema = z.object({
     project_value: z.number().optional().describe('Total value of the project (numeric)'),
     payment_conditions: z.string().optional().describe('Payment terms (e.g. 50/50, 30 days)'),
     deadline: z.string().optional().describe('Estimated timeline or deadline'),
+    // Upsells
+    upsell_options: z.array(z.object({
+        title: z.string(),
+        value: z.number()
+    })).optional().describe('Optional add-on items (Upsells) extracted from conversation')
 });
 
 export const maxDuration = 30;
@@ -48,6 +53,7 @@ export async function POST(req: Request) {
     3. **Focus on Pain**: Obsess over the 'Cost of Inaction'. Make the user verbalize what they lose if they don't hire this service.
     4. **One Thing at a Time**: Do not ask 5 questions. Ask 1 probing question.
     5. **Extract Continuously**: As soon as you hear a piece of info, call the 'update_proposal' tool.
+    6. **Suggest Upsells**: When discussing value, suggest adding "Optional" items to increase the ticket size (e.g. "Rush Fee", "Extra Consulting"). Extract these into 'upsell_options'.
     
     REQUIRED FIELDS TO EXTRACT (in roughly this order, but be flexible):
     - Client Name & Project Title
@@ -56,6 +62,7 @@ export async function POST(req: Request) {
     - Scope (Deliverables)
     - Value (Price) & Payment Terms
     - Timeline
+    - Optional Upsells (Ask "Do you want to offer any add-ons?")
     
     When you believe you have enough information to build a V1 proposal, ask the user if they want to generate the final document.
   `;

@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUp, Sparkles, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useChat } from 'ai/react'
+import { useChat } from '@ai-sdk/react'
 import { createProposal } from '@/app/actions/proposals'
 
 // Define ProposalData locally if not exported from engine, or update engine export
@@ -21,13 +23,13 @@ export type ProposalData = {
     decision_maker: string
     communication: string
     dependencies: string
-    total_value: number | string // Allow string for interim state
+    project_value: number | string // Allow string for interim state
     payment_terms: string
-    timeline: string
+    deadline: string
     closing_opt_in?: string
     deposit_amount?: string
     pix_key?: string
-    upsells_raw?: string
+    upsell_options?: { title: string; value: number }[]
 }
 
 // --- Preview Component (Right Side) ---
@@ -49,11 +51,11 @@ const LivePreview = ({ data }: { data: Partial<ProposalData> }) => {
                     <div className="grid grid-cols-2 gap-8">
                         <div>
                             <p className="text-[9px] uppercase tracking-widest font-bold opacity-30 mb-2">Investimento</p>
-                            <p className="text-xl italic">{data.total_value ? `R$ ${data.total_value}` : '...'}</p>
+                            <p className="text-xl italic">{data.project_value ? `R$ ${data.project_value}` : '...'}</p>
                         </div>
                         <div>
                             <p className="text-[9px] uppercase tracking-widest font-bold opacity-30 mb-2">Prazo</p>
-                            <p className="text-xl italic">{data.timeline || '...'}</p>
+                            <p className="text-xl italic">{data.deadline || '...'}</p>
                         </div>
                     </div>
 
@@ -77,6 +79,21 @@ const LivePreview = ({ data }: { data: Partial<ProposalData> }) => {
                             {data.scope || '...'}
                         </p>
                     </div>
+
+                    {/* Upsells Preview */}
+                    {data.upsell_options && data.upsell_options.length > 0 && (
+                        <div className="space-y-4 pt-4 border-t border-border/40">
+                            <p className="text-[9px] uppercase tracking-widest font-bold opacity-30">Opcionais Sugeridos</p>
+                            <ul className="space-y-2">
+                                {data.upsell_options.map((u, i) => (
+                                    <li key={i} className="text-sm italic text-muted-foreground flex justify-between">
+                                        <span>{u.title}</span>
+                                        <span>+ R$ {u.value}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
