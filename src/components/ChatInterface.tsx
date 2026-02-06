@@ -225,6 +225,8 @@ export default function ChatInterface() {
         const step = STEPS[currentStep]
         const content = data[step.field] || ''
 
+        if (!content.trim()) return
+
         // Persistence Logic
         if (user) {
             try {

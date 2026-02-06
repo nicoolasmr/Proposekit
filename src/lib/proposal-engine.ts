@@ -1,5 +1,9 @@
 
+import OpenAI from 'openai'
+import { SupabaseClient } from '@supabase/supabase-js'
+
 export type Proposal = {
+    id?: string // Added ID for updates
     client_name: string
     title: string | null
     objective: string | null
@@ -21,6 +25,8 @@ export type Proposal = {
     deposit_type?: string | null
     deposit_value?: number | null
     public_title?: string | null
+    // OpenAI Cache
+    ai_content?: ProposalContent | null
 }
 
 export type ProposalContent = {
@@ -35,7 +41,115 @@ export type ProposalContent = {
     nextSteps: string
 }
 
-export function generateProposalText(proposal: Proposal): ProposalContent {
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY || '',
+    dangerouslyAllowBrowser: true // Note: We should ideally only call this server-side
+})
+
+/**
+ * Main function to get proposal content.
+ * Strategy:
+ * 1. Check if 'ai_content' is already cached in the proposal object.
+ * 2. If yes, return it.
+ * 3. If no, try to generate using OpenAI.
+ * 4. If OpenAI fails or key is missing, fallback to Legacy Template.
+ * 5. If generated via AI and Supabase client is provided, save to DB.
+ */
+export async function generateProposalText(
+    proposal: Proposal,
+    supabase?: SupabaseClient
+): Promise<ProposalContent> {
+    // 1. Cache Hit
+    if (proposal.ai_content) {
+        return proposal.ai_content
+    }
+
+    // 2. Try AI Generation
+    try {
+        if (!process.env.OPENAI_API_KEY) {
+            console.warn('OPENAI_API_KEY missing, using legacy template.')
+            return generateProposalTextLegacy(proposal)
+        }
+
+        const aiContent = await generateProposalTextAI(proposal)
+
+        // 3. Save to DB (Cache)
+        if (supabase && proposal.id) {
+            await supabase
+                .from('proposals')
+                .update({ ai_content: aiContent })
+                .eq('id', proposal.id)
+        }
+
+        return aiContent
+
+    } catch (error) {
+        console.error('Error generating AI proposal:', error)
+        // 4. Fallback
+        return generateProposalTextLegacy(proposal)
+    }
+}
+
+async function generateProposalTextAI(proposal: Proposal): Promise<ProposalContent> {
+    const rawScope = proposal.scope || ''
+    const rawScopeItems = rawScope.split(/[\n,;]+/).map(item => item.trim()).filter(Boolean)
+
+    const systemPrompt = `
+    You are a senior specialized consultant writing a high-end commercial proposal.
+    Your tone is professional, persuasive, and authoritative.
+    
+    Output structured JSON matching this schema:
+    {
+      "introduction": "string",
+      "context": "string (understanding of the problem)",
+      "scope": ["string", "string"],
+      "outOfScope": "string or null",
+      "operation": "string (how it works)",
+      "investment": "string (formatted value)",
+      "commercialConditions": "string",
+      "timeline": "string",
+      "nextSteps": "string"
+    }
+
+    Instructions:
+    - Use Brazilian Portuguese.
+    - Expand on the user's brief inputs to make them sound more substantial and premium.
+    - Do NOT invent specific deliverables not mentioned, but enhance the wording of existing ones.
+    - For 'cost_of_inaction', emphasize the loss/risk powerfully.
+    `
+
+    const userPrompt = `
+    Client: ${proposal.client_name}
+    Project: ${proposal.title}
+    Objective: ${proposal.objective}
+    Urgency: ${proposal.urgency_reason}
+    Cost of Inaction: ${proposal.cost_of_inaction}
+    Scope Input: ${proposal.scope}
+    Out of Scope: ${proposal.out_of_scope}
+    Communication/Operation: ${proposal.communication}
+    Dependencies: ${proposal.dependencies}
+    Decision Maker: ${proposal.decision_maker}
+    Value: ${proposal.project_value}
+    Payment Terms: ${proposal.payment_conditions}
+    Deadline: ${proposal.deadline}
+    `
+
+    const completion = await openai.chat.completions.create({
+        model: "gpt-4o", // Or gpt-3.5-turbo if cost is a concern
+        response_format: { type: "json_object" },
+        messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+        ],
+    })
+
+    const result = completion.choices[0].message.content
+    if (!result) throw new Error('Empty response from OpenAI')
+
+    return JSON.parse(result) as ProposalContent
+}
+
+export function generateProposalTextLegacy(proposal: Proposal): ProposalContent {
     // 1. Capa / Introdução
     const introduction = `Esta proposta descreve os termos para a execução do projeto ${proposal.title || 'de Consultoria'}, desenvolvido sob medida para ${proposal.client_name}.`
 

@@ -47,7 +47,7 @@ export async function GET(
         // 4. Generate formatted text using the Engine
         // Casting props to 'any' temporarily because typescript definitions of 'proposals' table 
         // might not be updated yet with the new columns, but we assume the data is there or null.
-        const content = generateProposalText(proposal as any)
+        const content = await generateProposalText(proposal as any, supabase)
 
         // 5. Generate new PDF
         const stream = await renderToStream(

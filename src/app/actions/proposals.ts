@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { generateProposalText } from '@/lib/proposal-engine'
 
 export async function createProposal(formData: any) {
     const supabase = await createClient()
@@ -59,6 +60,14 @@ export async function createProposal(formData: any) {
     if (proposalError) {
         console.error('Proposal Error:', proposalError)
         throw proposalError
+    }
+
+
+    // Pre-generate AI content
+    try {
+        await generateProposalText(proposal as any, supabase)
+    } catch (e) {
+        console.error('Failed to pre-generate proposal content:', e)
     }
 
     revalidatePath('/dashboard')

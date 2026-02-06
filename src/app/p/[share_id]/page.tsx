@@ -54,7 +54,7 @@ export default async function PublicProposalPage({
 
     // 4. Generate Content via Engine
     // Casting as any until DB migration confirms types
-    const content = generateProposalText(proposal as any)
+    const content = await generateProposalText(proposal as any, supabase)
 
     const statusV2 = proposal.status_v2
 
