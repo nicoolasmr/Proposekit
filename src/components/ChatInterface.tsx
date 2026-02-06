@@ -115,7 +115,7 @@ export default function ChatInterface() {
                 content: 'Olá. Sou seu consultor de vendas sênior. Vamos montar uma proposta irrecusável. Comece me dizendo: Quem é o cliente e qual o grande problema que você vai resolver para ele?'
             }
         ],
-        onToolCall: ({ toolCall }) => {
+        onToolCall: ({ toolCall }: { toolCall: any }) => {
             if (toolCall.toolName === 'update_proposal') {
                 const newData = toolCall.args as Partial<ProposalData>
                 console.log('AI Extraction:', newData)
