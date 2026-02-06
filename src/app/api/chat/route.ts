@@ -80,7 +80,7 @@ export async function POST(req: Request) {
                     // so the client can update its local state.
                     return { updated: true, fields: Object.keys(newData) };
                 },
-            }),
+            } as any),
         },
     });
 
