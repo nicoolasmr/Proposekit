@@ -1,6 +1,45 @@
+'use client'
+import { useState } from 'react'
 import { ProposalContent } from '@/lib/proposal-engine'
+import { Plus, Check, DollarSign } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
-export default function ProposalPreview({ content, clientName }: { content: ProposalContent; clientName: string }) {
+export default function ProposalPreview({
+    content,
+    clientName,
+    upsellOptions
+}: {
+    content: ProposalContent;
+    clientName: string;
+    upsellOptions?: { title: string; value: number }[] | null
+}) {
+    const [selectedUpsells, setSelectedUpsells] = useState<number[]>([])
+
+    // Helper to parse base value (assuming format "R$ 1.500,00" or similar in text)
+    // This is heuristic-based if we rely on the generated text string.
+    // Ideally we should pass the numeric `project_value` separately too.
+    // But for this feature, we might need to parse.
+    // Actually, `content.investment` is a full sentence.
+    // "O investimento total ... é de R$ 15.000,00."
+    // Let's assume we want to show a "Total Estimado" at the bottom or just show the Upsells adding up.
+
+    // To do this properly, we should probably pass the numeric `baseValue` as a prop too.
+    // But since I can't easily change the Server Component -> Client Component interface without huge refactor,
+    // I will render the Upsells as a separate block that shows "Adicionais Disponíveis".
+
+    const toggleUpsell = (index: number) => {
+        setSelectedUpsells(prev =>
+            prev.includes(index)
+                ? prev.filter(i => i !== index)
+                : [...prev, index]
+        )
+    }
+
+    const upsellTotal = upsellOptions?.reduce((acc, opt, idx) => {
+        if (selectedUpsells.includes(idx)) return acc + opt.value
+        return acc
+    }, 0) || 0
+
     return (
         <div className="bg-white border border-[#e5e5e5] shadow-2xl max-w-3xl mx-auto p-12 md:p-24 font-serif relative overflow-hidden text-[#333]">
             {/* Header */}
@@ -76,10 +115,62 @@ export default function ProposalPreview({ content, clientName }: { content: Prop
                     </div>
                 </section>
 
+                {/* UPSELLS SECTION */}
+                {upsellOptions && upsellOptions.length > 0 && (
+                    <section className="space-y-6">
+                        <h3 className="font-sans text-xs uppercase tracking-[0.1em] font-bold border-b border-border pb-2 mb-4">
+                            {content.outOfScope ? '6' : '5'}. Opcionais (Upsell)
+                        </h3>
+                        <div className="grid gap-4">
+                            {upsellOptions.map((opt, idx) => {
+                                const isSelected = selectedUpsells.includes(idx)
+                                return (
+                                    <div
+                                        key={idx}
+                                        onClick={() => toggleUpsell(idx)}
+                                        className={cn(
+                                            "cursor-pointer border p-6 flex items-center justify-between transition-all duration-300 group hover:border-black/30",
+                                            isSelected ? "bg-black text-white border-black" : "bg-white border-border/60"
+                                        )}
+                                    >
+                                        <div className="space-y-1">
+                                            <p className={cn("text-lg font-serif italic", isSelected ? "text-white" : "text-black")}>
+                                                {opt.title}
+                                            </p>
+                                            <p className={cn("text-xs font-sans uppercase tracking-widest", isSelected ? "opacity-70" : "opacity-40")}>
+                                                Adicionar ao pacote
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-6">
+                                            <p className={cn("font-serif text-lg", isSelected ? "text-white" : "text-black")}>
+                                                + {opt.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                            </p>
+                                            <div className={cn(
+                                                "w-8 h-8 flex items-center justify-center border transition-all",
+                                                isSelected ? "bg-white border-white" : "border-black/10 group-hover:border-black/30"
+                                            )}>
+                                                {isSelected ? <Check className="w-4 h-4 text-black" /> : <Plus className="w-4 h-4 opacity-30" />}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+
+                        {/* Dynamic Footer for Upsell */}
+                        <div className="mt-8 p-6 bg-secondary/20 flex justify-between items-center">
+                            <p className="text-sm font-sans uppercase tracking-widest opacity-60">Valor Adicional Selecionado</p>
+                            <p className="text-2xl font-serif italic text-black">
+                                + {upsellTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </p>
+                        </div>
+                    </section>
+                )}
+
                 {/* 6. Condições */}
                 <section className="space-y-4">
                     <h3 className="font-sans text-xs uppercase tracking-[0.1em] font-bold border-b border-border pb-2 mb-4">
-                        {content.outOfScope ? '6' : '5'}. Condições Comerciais
+                        {content.outOfScope ? (upsellOptions && upsellOptions.length > 0 ? '7' : '6') : (upsellOptions && upsellOptions.length > 0 ? '6' : '5')}. Condições Comerciais
                     </h3>
                     <p className="text-lg leading-relaxed text-muted-foreground">
                         {content.commercialConditions}
@@ -89,7 +180,7 @@ export default function ProposalPreview({ content, clientName }: { content: Prop
                 {/* 7. Prazo */}
                 <section className="space-y-4">
                     <h3 className="font-sans text-xs uppercase tracking-[0.1em] font-bold border-b border-border pb-2 mb-4">
-                        {content.outOfScope ? '7' : '6'}. Prazo Estimado
+                        {content.outOfScope ? (upsellOptions && upsellOptions.length > 0 ? '8' : '7') : (upsellOptions && upsellOptions.length > 0 ? '7' : '6')}. Prazo Estimado
                     </h3>
                     <p className="text-lg leading-relaxed text-muted-foreground">
                         {content.timeline}
@@ -99,7 +190,7 @@ export default function ProposalPreview({ content, clientName }: { content: Prop
                 {/* 8. Próximos Passos */}
                 <section className="space-y-4">
                     <h3 className="font-sans text-xs uppercase tracking-[0.1em] font-bold border-b border-border pb-2 mb-4">
-                        {content.outOfScope ? '8' : '7'}. Próximos Passos
+                        {content.outOfScope ? (upsellOptions && upsellOptions.length > 0 ? '9' : '8') : (upsellOptions && upsellOptions.length > 0 ? '8' : '7')}. Próximos Passos
                     </h3>
                     <p className="text-lg leading-relaxed text-muted-foreground">
                         {content.nextSteps}

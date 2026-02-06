@@ -95,7 +95,11 @@ export default async function PublicProposalPage({
                     </div>
                 </header>
 
-                <ProposalPreview content={content} clientName={proposal.client_name} />
+                <ProposalPreview
+                    content={content}
+                    clientName={proposal.client_name}
+                    upsellOptions={proposal.upsell_options}
+                />
 
                 <footer className="text-center pt-32 pb-20">
                     <p className="text-muted-foreground text-sm font-serif italic mb-8 opacity-50">

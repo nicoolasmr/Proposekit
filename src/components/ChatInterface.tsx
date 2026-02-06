@@ -29,6 +29,8 @@ type ProposalData = {
     closing_opt_in?: string
     deposit_amount?: string
     pix_key?: string
+    // Upsells
+    upsells_raw?: string
 }
 
 type Step = {
@@ -171,6 +173,13 @@ const STEPS: Step[] = [
         field: 'pix_key',
         placeholder: 'CPF, CNPJ, Email ou Aleatória',
         feedback: 'Anotado.'
+    },
+    {
+        id: 'upsell_options',
+        question: 'Gostaria de oferecer itens adicionais (Upsells)?',
+        field: 'upsells_raw',
+        placeholder: 'Ex: Consultoria Extra - 1000',
+        feedback: 'Perfeito. Isso aumenta seu ticket médio.'
     }
 ]
 
@@ -194,7 +203,8 @@ export default function ChatInterface() {
         timeline: '',
         closing_opt_in: '',
         deposit_amount: '',
-        pix_key: ''
+        pix_key: '',
+        upsells_raw: ''
     })
     const [isTransitioning, setIsTransitioning] = useState(false)
     const [showPreview, setShowPreview] = useState(false)
@@ -226,9 +236,12 @@ export default function ChatInterface() {
         }
 
         const step = STEPS[currentStep]
-        const content = data[step.field] || ''
+        const content = data[step.field as keyof ProposalData] || ''
 
-        if (!content.trim()) return
+        // if (!content.trim()) return // Optional for upsells? No, allow empty.
+        // But for others it might be required.
+        // Upsells optional: if empty, just skip.
+        if (step.id !== 'upsell_options' && !content.toString().trim()) return
 
         // Persistence Logic
         if (user) {
@@ -260,16 +273,39 @@ export default function ChatInterface() {
                     const optedIn = (data.closing_opt_in || '').toLowerCase().includes('sim')
                     if (!optedIn) {
                         // Skip closing details if not opted in
-                        // If next step is deposit_amount, and we skip, we check next.
-                        // Simple approach: Jump to end if opted out? 
-                        // Or jump 2 steps.
-                        // Since these are the last steps, we can just finish.
-                        setIsTransitioning(true)
-                        setTimeout(() => {
-                            setIsTransitioning(false)
-                            setShowPreview(true)
-                        }, 2500)
-                        return
+                        const isLastStep = nextStepIndex === STEPS.length - 1
+                        if (!isLastStep) {
+                            // If not last, move to next (which might be upsells)
+                            // But upsells is after pix_key now.
+                            // So we check what is next.
+                            // Current order: pix_key -> upsells
+                            // So if at deposit_amount (skip) -> pix_key (skip? no logic for skip for pix_key if deposit skipped? yes logic handles nextStep check)
+                            // We need to find the next valid step.
+                            // Simple hack: just increment index until valid or end.
+                            // But for now, let's keep it simple.
+                            // If next is deposit/pix and opt-out, we skip to Upsells (if exists) or Finish.
+
+                            // Actually, let's just properly find the next index.
+                            let nextIdx = nextStepIndex
+                            let nextS = STEPS[nextIdx]
+
+                            // While next step is deposit/pix and we opted out, skip it.
+                            while (nextIdx < STEPS.length && (STEPS[nextIdx].id === 'deposit_amount' || STEPS[nextIdx].id === 'pix_key') && !optedIn) {
+                                nextIdx++
+                            }
+
+                            if (nextIdx < STEPS.length) {
+                                setCurrentStep(nextIdx)
+                                return
+                            } else {
+                                setIsTransitioning(true)
+                                setTimeout(() => {
+                                    setIsTransitioning(false)
+                                    setShowPreview(true)
+                                }, 2500)
+                                return
+                            }
+                        }
                     }
                 }
 
@@ -293,7 +329,26 @@ export default function ChatInterface() {
     // Partial Preview State
     if (showPreview) {
         if (typeof window !== 'undefined') {
-            localStorage.setItem('pending_proposal', JSON.stringify(data))
+            // Parse Upsells
+            const upsellsRaw = data.upsells_raw || ''
+            const parsedUpsells = upsellsRaw.split(/[\n,]+/).map(item => {
+                // Try format "Title - Value"
+                const parts = item.split(/[-–—]+/) // hyphen variants
+                if (parts.length >= 2) {
+                    const valueStr = parts.pop()?.trim() || '0'
+                    const title = parts.join('-').trim()
+                    const value = parseFloat(valueStr.replace(/[^0-9,.]/g, '').replace(',', '.'))
+                    if (title && !isNaN(value)) {
+                        return { title, value }
+                    }
+                }
+                return null
+            }).filter(Boolean)
+
+            localStorage.setItem('pending_proposal', JSON.stringify({
+                ...data,
+                upsell_options: parsedUpsells
+            }))
         }
 
         return (
