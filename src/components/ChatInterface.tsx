@@ -217,6 +217,9 @@ export default function ChatInterface() {
     }, [currentStep, feedbackMessage])
 
     const handleNext = async () => {
+        // Prevent double triggers
+        if (feedbackMessage) return
+
         if (currentStep === -1) {
             setCurrentStep(0)
             return

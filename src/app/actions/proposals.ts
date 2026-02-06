@@ -52,7 +52,8 @@ export async function createProposal(formData: any) {
             pix_receiver_name: formData.pix_receiver_name,
             pix_receiver_document: formData.pix_receiver_document,
             status_v2: 'draft',
-            public_title: formData.public_title || formData.title
+            public_title: formData.public_title || formData.title,
+            upsell_options: formData.upsell_options
         })
         .select()
         .single()

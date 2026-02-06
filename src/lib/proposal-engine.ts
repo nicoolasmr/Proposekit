@@ -25,6 +25,12 @@ export type Proposal = {
     deposit_type?: string | null
     deposit_value?: number | null
     public_title?: string | null
+    // Upsells
+    upsell_options?: {
+        title: string
+        value: number
+        text?: string
+    }[] | null
     // OpenAI Cache
     ai_content?: ProposalContent | null
 }
