@@ -220,6 +220,8 @@ export default function ChatInterface() {
         })
     }, [])
 
+    const isProcessing = useRef(false)
+
     useEffect(() => {
         if (currentStep >= 0 && !feedbackMessage) {
             inputRef.current?.focus()
@@ -227,21 +229,28 @@ export default function ChatInterface() {
     }, [currentStep, feedbackMessage])
 
     const handleNext = async () => {
-        // Prevent double triggers
-        if (feedbackMessage) return
+        // Strict Concurrency Lock
+        if (isProcessing.current) return
+        isProcessing.current = true
+
+        // Just in case, unlock on error or early return
+        const unlock = () => {
+            isProcessing.current = false
+        }
 
         if (currentStep === -1) {
             setCurrentStep(0)
+            unlock()
             return
         }
 
         const step = STEPS[currentStep]
         const content = data[step.field as keyof ProposalData] || ''
 
-        // if (!content.trim()) return // Optional for upsells? No, allow empty.
-        // But for others it might be required.
-        // Upsells optional: if empty, just skip.
-        if (step.id !== 'upsell_options' && !content.toString().trim()) return
+        if (step.id !== 'upsell_options' && !content.toString().trim()) {
+            unlock()
+            return
+        }
 
         // Persistence Logic
         if (user) {
@@ -261,60 +270,47 @@ export default function ChatInterface() {
 
         setFeedbackMessage(step.feedback)
 
+        // Safety timeout to ensure unlock happens even if animation has issues,
+        // but primarily we unlock inside the main timeout.
         setTimeout(() => {
             setFeedbackMessage(null)
             if (currentStep < STEPS.length - 1) {
-                // Skip Logic for Closing Kit
                 const nextStepIndex = currentStep + 1
                 const nextStep = STEPS[nextStepIndex]
 
                 if (nextStep.id === 'deposit_amount' || nextStep.id === 'pix_key') {
-                    // Check if user opted out
                     const optedIn = (data.closing_opt_in || '').toLowerCase().includes('sim')
                     if (!optedIn) {
-                        // Skip closing details if not opted in
-                        const isLastStep = nextStepIndex === STEPS.length - 1
-                        if (!isLastStep) {
-                            // If not last, move to next (which might be upsells)
-                            // But upsells is after pix_key now.
-                            // So we check what is next.
-                            // Current order: pix_key -> upsells
-                            // So if at deposit_amount (skip) -> pix_key (skip? no logic for skip for pix_key if deposit skipped? yes logic handles nextStep check)
-                            // We need to find the next valid step.
-                            // Simple hack: just increment index until valid or end.
-                            // But for now, let's keep it simple.
-                            // If next is deposit/pix and opt-out, we skip to Upsells (if exists) or Finish.
+                        let nextIdx = nextStepIndex
+                        // Skip loop logic...
+                        while (nextIdx < STEPS.length && (STEPS[nextIdx].id === 'deposit_amount' || STEPS[nextIdx].id === 'pix_key') && !optedIn) {
+                            nextIdx++
+                        }
 
-                            // Actually, let's just properly find the next index.
-                            let nextIdx = nextStepIndex
-                            let nextS = STEPS[nextIdx]
-
-                            // While next step is deposit/pix and we opted out, skip it.
-                            while (nextIdx < STEPS.length && (STEPS[nextIdx].id === 'deposit_amount' || STEPS[nextIdx].id === 'pix_key') && !optedIn) {
-                                nextIdx++
-                            }
-
-                            if (nextIdx < STEPS.length) {
-                                setCurrentStep(nextIdx)
-                                return
-                            } else {
-                                setIsTransitioning(true)
-                                setTimeout(() => {
-                                    setIsTransitioning(false)
-                                    setShowPreview(true)
-                                }, 2500)
-                                return
-                            }
+                        if (nextIdx < STEPS.length) {
+                            setCurrentStep(nextIdx)
+                            unlock()
+                            return
+                        } else {
+                            setIsTransitioning(true)
+                            setTimeout(() => {
+                                setIsTransitioning(false)
+                                setShowPreview(true)
+                                unlock()
+                            }, 2500)
+                            return
                         }
                     }
                 }
 
                 setCurrentStep(s => s + 1)
+                unlock()
             } else {
                 setIsTransitioning(true)
                 setTimeout(() => {
                     setIsTransitioning(false)
                     setShowPreview(true)
+                    unlock()
                 }, 2500)
             }
         }, 800)
