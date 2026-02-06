@@ -223,7 +223,7 @@ export default function ChatInterface() {
         }
 
         const step = STEPS[currentStep]
-        const content = data[step.field]
+        const content = data[step.field] || ''
 
         // Persistence Logic
         if (user) {
