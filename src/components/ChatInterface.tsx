@@ -154,18 +154,18 @@ export default function ChatInterface() {
     const handleCreateProposal = async () => {
         setIsSaving(true)
         try {
-            await createProposal(proposalData)
-            // Redirect happens in action, or we push router here. 
-            // The action uses revalidatePath but we might need explicit redirect
-            window.location.href = '/dashboard' // Simple redirect for now
+            const proposal = await createProposal(proposalData)
+            // Redirect to proposals list
+            window.location.href = '/dashboard/proposals'
         } catch (e) {
-            console.error(e)
+            console.error('Error creating proposal:', e)
+            alert('Erro ao criar proposta. Por favor, tente novamente.')
             setIsSaving(false)
         }
     }
 
     return (
-        <div className="flex h-screen overflow-hidden bg-slate-50">
+        <div className="flex h-full overflow-hidden bg-slate-50">
             {/* Left: Chat Interaction */}
             <div className="w-1/2 flex flex-col relative bg-white border-r border-slate-200">
                 {/* Chat Header */}

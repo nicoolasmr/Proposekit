@@ -18,19 +18,19 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "ProposeKit — Propostas claras fecham negócios mais rápido.",
-  description: "Crie uma proposta profissional em minutos — direto no chat.",
+  title: "ProposeKit — Feche vendas mais rápido com Closing Kit integrado",
+  description: "Crie propostas profissionais com IA, aceite digital e pagamento de entrada. Tudo em um só link.",
   openGraph: {
-    title: "ProposeKit — Propostas claras fecham negócios mais rápido.",
-    description: "Crie uma proposta profissional em minutos — direto no chat.",
+    title: "ProposeKit — Plataforma completa de fechamento de vendas",
+    description: "Propostas + Aceite Digital + Pagamento de Entrada. Feche negócios em minutos, não em dias.",
     url: "https://proposekit.com",
     siteName: "ProposeKit",
     images: [
       {
-        url: "/og-image.jpg", // Needs to be added eventually, but defining it is key
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "ProposeKit Interface",
+        alt: "ProposeKit - Plataforma de Fechamento de Vendas",
       },
     ],
     locale: "pt_BR",
@@ -38,8 +38,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ProposeKit",
-    description: "Crie uma proposta profissional em minutos.",
+    title: "ProposeKit — Closing Kit integrado",
+    description: "Propostas profissionais com IA + aceite digital + pagamento de entrada.",
     creator: "@proposekit",
   },
 };

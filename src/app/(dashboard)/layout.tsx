@@ -1,4 +1,4 @@
-import { DashboardHeader } from '@/components/DashboardHeader'
+import Sidebar from '@/components/Sidebar'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
@@ -15,9 +15,14 @@ export default async function DashboardLayout({
     }
 
     return (
-        <div className="min-h-screen bg-background flex flex-col selection:bg-black selection:text-white">
-            <DashboardHeader />
-            {children}
+        <div className="flex h-screen overflow-hidden bg-slate-50">
+            {/* Sidebar */}
+            <Sidebar />
+
+            {/* Main Content */}
+            <main className="flex-1 overflow-auto">
+                {children}
+            </main>
         </div>
     )
 }
