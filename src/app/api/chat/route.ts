@@ -22,8 +22,19 @@ export const proposalSchema = z.object({
 
 export const maxDuration = 30;
 
+import { createClient } from '@/lib/supabase/server';
+
 export async function POST(req: Request) {
     const { messages, currentData } = await req.json();
+
+    // SECURITY: Authenticated Only
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return new Response("Unauthorized", { status: 401 });
+    }
+
 
     const systemPrompt = `
     You are an aggressive, high-stakes sales consultant for 'ProposeKit'. 

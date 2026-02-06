@@ -20,6 +20,28 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "ProposeKit — Propostas claras fecham negócios mais rápido.",
   description: "Crie uma proposta profissional em minutos — direto no chat.",
+  openGraph: {
+    title: "ProposeKit — Propostas claras fecham negócios mais rápido.",
+    description: "Crie uma proposta profissional em minutos — direto no chat.",
+    url: "https://proposekit.com",
+    siteName: "ProposeKit",
+    images: [
+      {
+        url: "/og-image.jpg", // Needs to be added eventually, but defining it is key
+        width: 1200,
+        height: 630,
+        alt: "ProposeKit Interface",
+      },
+    ],
+    locale: "pt_BR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ProposeKit",
+    description: "Crie uma proposta profissional em minutos.",
+    creator: "@proposekit",
+  },
 };
 
 import { Toaster } from "sonner";
