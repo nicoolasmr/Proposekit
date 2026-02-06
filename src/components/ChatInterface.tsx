@@ -144,7 +144,7 @@ export default function ChatInterface() {
             <div className="w-1/2 flex flex-col relative border-r border-border/40">
                 <div className="flex-1 overflow-y-auto px-12 py-12 custom-scrollbar">
                     <div className="space-y-8 max-w-2xl mx-auto">
-                        {messages.map(m => (
+                        {messages.map((m: any) => (
                             <motion.div
                                 key={m.id}
                                 initial={{ opacity: 0, y: 10 }}
